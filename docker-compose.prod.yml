@@ -1,0 +1,13 @@
+# Прод-режим: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+services:
+  backend:
+    build:
+      target: production
+    restart: unless-stopped
+
+  frontend:
+    build:
+      target: production
+    ports:
+      - "5173:80"
+    restart: unless-stopped
