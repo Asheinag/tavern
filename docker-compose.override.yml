@@ -1,0 +1,18 @@
+# Дев-режим: подхватывается автоматически при `docker compose up`
+services:
+  backend:
+    build:
+      target: development
+    volumes:
+      - ./backend:/app
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      target: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host
