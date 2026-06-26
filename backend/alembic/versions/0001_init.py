@@ -4,8 +4,10 @@ Revision ID: 0001
 Revises:
 Create Date: 2026-06-26
 """
-from alembic import op
+
 import sqlalchemy as sa
+
+from alembic import op
 
 revision = "0001"
 down_revision = None
@@ -20,7 +22,9 @@ def upgrade() -> None:
         sa.Column("name", sa.String(100), nullable=False),
         sa.Column("email", sa.String(255), unique=True, nullable=True),
         sa.Column("avatar_color", sa.String(20), nullable=False, server_default="#6c757d"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
     op.create_table(
         "games",
@@ -30,7 +34,9 @@ def upgrade() -> None:
         sa.Column("system", sa.String(100), nullable=False, server_default=""),
         sa.Column("cover", sa.Text, nullable=True),
         sa.Column("share_code", sa.String(32), unique=True, nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
 
 

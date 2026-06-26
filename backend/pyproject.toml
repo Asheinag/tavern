@@ -11,3 +11,32 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.51",
     "uvicorn[standard]>=0.49.0",
 ]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.22.1",
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.20",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+# E/F — базовые ошибки, I — сортировка импортов, UP — современный синтаксис Python
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/*" = ["F401"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=app --cov-report=term-missing"
+
+[tool.coverage.report]
+omit = ["alembic/*"]

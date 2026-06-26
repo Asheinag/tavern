@@ -1,12 +1,13 @@
-from datetime import datetime, timezone
-from sqlalchemy import String, Text, ForeignKey, DateTime
+from datetime import UTC, datetime
+
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class User(Base):
