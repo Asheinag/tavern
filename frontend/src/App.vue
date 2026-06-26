@@ -27,8 +27,8 @@ onMounted(async () => {
   try {
     const res = await axios.get<HealthStatus>('/api/health')
     status.value = res.data
-  } catch (e: any) {
-    error.value = e?.message ?? 'Неизвестная ошибка'
+  } catch (e: unknown) {
+    error.value = e instanceof Error ? e.message : 'Неизвестная ошибка'
   } finally {
     loading.value = false
   }
