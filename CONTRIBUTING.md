@@ -16,13 +16,47 @@
 - БД: PostgreSQL 16, миграции — **Alembic**.
 
 ```bash
-docker compose up                  # поднять БД + бэк + фронт
+docker compose up                        # поднять БД + бэк + фронт
 cd backend && uv run uvicorn app.main:app --reload
 cd backend && uv run alembic upgrade head
 cd frontend && npm run dev
 ```
 
-Перед PR прогони линт и тесты (когда будут настроены: ruff + pytest на бэке, eslint + vitest на фронте).
+## Линт и тесты (обязательно перед PR)
+
+Весь код должен проходить линт и тесты. CI проверяет это автоматически.
+
+### Backend
+
+```bash
+cd backend
+
+uv run ruff check .          # линтер
+uv run ruff format --check . # форматирование
+uv run pytest                # тесты + покрытие
+```
+
+**Правила ruff:** `E`, `F` (ошибки), `I` (сортировка импортов), `UP` (современный синтаксис). Длина строки — 100 символов.
+
+Исправить автоматически: `uv run ruff check . --fix && uv run ruff format .`
+
+### Frontend
+
+```bash
+cd frontend
+
+npm run lint   # eslint (ошибки и предупреждения — всё должно быть чисто)
+npm run test   # vitest
+```
+
+**Правила eslint:** `@typescript-eslint/recommended` + `eslint-plugin-vue/flat/recommended`. Запрещён `any`, TypeScript должен знать типы.
+
+### Что должно быть зелёным перед PR
+- `ruff check` — 0 ошибок
+- `ruff format --check` — 0 файлов к переформатированию
+- `pytest` — все тесты проходят
+- `eslint --max-warnings 0` — 0 предупреждений
+- `vitest run` — все тесты проходят
 
 ## Что НЕ принимается без обсуждения
 - Смена стека или ключевых архитектурных решений.
