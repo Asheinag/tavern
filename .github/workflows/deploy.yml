@@ -14,6 +14,9 @@ jobs:
       packages: read
 
     steps:
+      - name: Lowercase repo name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -23,8 +26,8 @@ jobs:
       - name: Check backend image
         id: check-backend
         run: |
-          if docker manifest inspect ghcr.io/${{ github.repository }}/backend:latest > /dev/null 2>&1; then
-            DIGEST=$(docker manifest inspect ghcr.io/${{ github.repository }}/backend:latest \
+          if docker manifest inspect ghcr.io/${{ env.REPO }}/backend:latest > /dev/null 2>&1; then
+            DIGEST=$(docker manifest inspect ghcr.io/${{ env.REPO }}/backend:latest \
               | python3 -c "import sys,json; m=json.load(sys.stdin); print(m.get('config',{}).get('digest','unknown'))[:19]")
             echo "found=true" >> $GITHUB_OUTPUT
             echo "digest=$DIGEST" >> $GITHUB_OUTPUT
@@ -35,7 +38,7 @@ jobs:
       - name: Check frontend image
         id: check-frontend
         run: |
-          if docker manifest inspect ghcr.io/${{ github.repository }}/frontend:latest > /dev/null 2>&1; then
+          if docker manifest inspect ghcr.io/${{ env.REPO }}/frontend:latest > /dev/null 2>&1; then
             echo "found=true" >> $GITHUB_OUTPUT
           else
             echo "found=false" >> $GITHUB_OUTPUT
@@ -53,14 +56,14 @@ jobs:
             echo "✅ Образы найдены в ghcr.io. Выполнил бы деплой:" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "docker pull ghcr.io/${{ github.repository }}/backend:latest" >> $GITHUB_STEP_SUMMARY
-            echo "docker pull ghcr.io/${{ github.repository }}/frontend:latest" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ghcr.io/${{ env.REPO }}/backend:latest" >> $GITHUB_STEP_SUMMARY
+            echo "docker pull ghcr.io/${{ env.REPO }}/frontend:latest" >> $GITHUB_STEP_SUMMARY
             echo "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d" >> $GITHUB_STEP_SUMMARY
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Тег:** \`$TAG\`  " >> $GITHUB_STEP_SUMMARY
-            echo "**Образ backend:** \`ghcr.io/${{ github.repository }}/backend:latest\`  " >> $GITHUB_STEP_SUMMARY
-            echo "**Образ frontend:** \`ghcr.io/${{ github.repository }}/frontend:latest\`" >> $GITHUB_STEP_SUMMARY
+            echo "**Образ backend:** \`ghcr.io/${{ env.REPO }}/backend:latest\`  " >> $GITHUB_STEP_SUMMARY
+            echo "**Образ frontend:** \`ghcr.io/${{ env.REPO }}/frontend:latest\`" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Образы не найдены в ghcr.io. Сначала смержи изменения в \`main\` — release workflow соберёт образы." >> $GITHUB_STEP_SUMMARY
             exit 1
