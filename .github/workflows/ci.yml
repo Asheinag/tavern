@@ -9,6 +9,9 @@ jobs:
   backend:
     name: Backend — lint & test
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
     defaults:
       run:
         working-directory: backend
@@ -29,11 +32,29 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Pytest
-        run: uv run pytest
+        run: uv run pytest --junit-xml=test-report.xml --cov-report=xml:coverage.xml
+
+      - name: Test summary
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Backend — test summary
+          path: backend/test-report.xml
+          reporter: java-junit
+
+      - name: Coverage comment
+        if: github.event_name == 'pull_request'
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-xml-coverage-path: backend/coverage.xml
+          junitxml-path: backend/test-report.xml
 
   frontend:
     name: Frontend — lint & test
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
     defaults:
       run:
         working-directory: frontend
@@ -53,4 +74,10 @@ jobs:
         run: npm run lint
 
       - name: Vitest
-        run: npm run test
+        run: npm run test -- --coverage
+
+      - name: Coverage comment
+        if: github.event_name == 'pull_request'
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          working-directory: frontend
