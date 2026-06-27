@@ -36,7 +36,9 @@ export const artifactsApi = {
     fd.append('type', type)
     fd.append('title', title)
     fd.append('tags', JSON.stringify(tags))
-    return http.post<Artifact>('/artifacts', fd).then((r) => r.data)
+    return http
+      .post<Artifact>('/artifacts', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      .then((r) => r.data)
   },
 
   list: (type?: string) =>
