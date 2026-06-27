@@ -8,7 +8,7 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
       include: ['src/**/*.{ts,vue}'],
       exclude: ['src/main.ts', 'src/**/*.d.ts'],
     },
