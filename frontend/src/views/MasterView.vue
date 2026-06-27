@@ -33,9 +33,9 @@
         Библиотека
       </button>
 
-      <div class="live-indicator">
+      <div class="live-indicator" :class="{ active: liveStore.connected && !!liveStore.liveState.bg }">
         <span class="live-dot"></span>
-        <span class="live-label">Экран затемнён</span>
+        <span class="live-label">{{ liveLabel }}</span>
       </div>
     </div>
 
@@ -192,6 +192,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCampaignStore } from '../stores/campaign'
 import { useArtifactsStore } from '../stores/artifacts'
+import { useLiveStore } from '../stores/live'
 import SceneNode from '../components/canvas/SceneNode.vue'
 import CanvasEdges from '../components/canvas/CanvasEdges.vue'
 import ArtifactLibrary from '../components/artifacts/ArtifactLibrary.vue'
@@ -201,11 +202,13 @@ const route = useRoute()
 const router = useRouter()
 const store = useCampaignStore()
 const artifactsStore = useArtifactsStore()
+const liveStore = useLiveStore()
 
 const gameId = Number(route.params.id)
 onMounted(() => {
   store.fetchGame(gameId)
   artifactsStore.fetchLibrary()
+  liveStore.connect(gameId)
 })
 
 const tabs = [
@@ -253,6 +256,12 @@ function statusLabel(s: string) {
   return ({ draft: 'Черновик', available: 'Доступна', locked: 'Скрыта' } as Record<string, string>)[s] ?? s
 }
 
+const liveLabel = computed(() => {
+  if (!liveStore.connected) return 'Не подключено'
+  if (liveStore.liveState.bg) return 'В эфире'
+  return 'Экран затемнён'
+})
+
 const canvasMinW = computed(() => {
   const scenes = store.currentGame?.scenes ?? []
   return scenes.length ? Math.max(...scenes.map((s) => s.x + 280)) : 800
@@ -276,7 +285,10 @@ function onNodeMove(id: number, x: number, y: number) {
   moveTimer = setTimeout(() => store.updateScene(id, { x: scene.x, y: scene.y }), 300)
 }
 
-onUnmounted(() => { if (moveTimer) clearTimeout(moveTimer) })
+onUnmounted(() => {
+  if (moveTimer) clearTimeout(moveTimer)
+  liveStore.disconnect()
+})
 
 // ── Рёбра ────────────────────────────────────────────────────────────────────
 
@@ -452,6 +464,12 @@ async function onDeleteScene() {
   height: 7px;
   border-radius: 50%;
   background: var(--t20);
+  transition: background 0.2s;
+}
+
+.live-indicator.active .live-dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
 }
 
 .live-label {
@@ -460,6 +478,11 @@ async function onDeleteScene() {
   letter-spacing: .06em;
   color: var(--t34);
   text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.live-indicator.active .live-label {
+  color: var(--accent);
 }
 
 .body {
