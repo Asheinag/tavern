@@ -20,6 +20,19 @@ vi.mock('../api/games', () => ({
   },
 }))
 
+vi.mock('../api/artifacts', () => ({
+  artifactsApi: {
+    upload: vi.fn(),
+    list: vi.fn().mockResolvedValue([]),
+    patch: vi.fn(),
+    remove: vi.fn(),
+    listSceneArtifacts: vi.fn().mockResolvedValue([]),
+    attach: vi.fn(),
+    detach: vi.fn(),
+    patchLink: vi.fn(),
+  },
+}))
+
 const mockScene = {
   id: 10,
   game_id: 1,
