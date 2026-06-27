@@ -19,6 +19,9 @@
         class="artifact-card"
         :class="{ 'is-attached': isAttached(artifact.id) }"
       >
+        <div class="card-thumb">
+          <img :src="`/uploads/${artifact.file_path}`" :alt="artifact.title" />
+        </div>
         <div class="card-top">
           <span class="type-tag" :class="artifact.type">
             {{ artifact.type === 'location_image' ? 'фон' : 'npc' }}
@@ -199,6 +202,22 @@ async function toggleAttach(artifact: Artifact) {
 
 .artifact-card.is-attached {
   border-color: var(--accentBd);
+}
+
+.card-thumb {
+  width: 100%;
+  height: 72px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--t0);
+  flex-shrink: 0;
+}
+
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .card-top {
