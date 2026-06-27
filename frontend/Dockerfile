@@ -1,5 +1,5 @@
 # --- Development ---
-FROM node:20-alpine AS development
+FROM node:24-alpine AS development
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -7,7 +7,7 @@ COPY . .
 CMD ["npm", "run", "dev", "--", "--host"]
 
 # --- Build ---
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
