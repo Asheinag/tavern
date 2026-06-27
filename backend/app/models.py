@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -34,3 +34,57 @@ class Game(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     owner: Mapped["User"] = relationship("User", back_populates="games")
+    scenes: Mapped[list["Scene"]] = relationship(
+        "Scene", back_populates="game", cascade="all, delete-orphan"
+    )
+    edges: Mapped[list["Edge"]] = relationship(
+        "Edge", back_populates="game", cascade="all, delete-orphan"
+    )
+
+
+class Scene(Base):
+    __tablename__ = "scenes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(String(200))
+    type: Mapped[str] = mapped_column(String(50), default="")
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    color: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    summary: Mapped[str] = mapped_column(Text, default="")
+    x: Mapped[int] = mapped_column(Integer, default=0)
+    y: Mapped[int] = mapped_column(Integer, default=0)
+    col: Mapped[int] = mapped_column(Integer, default=0)
+    row: Mapped[int] = mapped_column(Integer, default=0)
+
+    game: Mapped["Game"] = relationship("Game", back_populates="scenes")
+    edges_from: Mapped[list["Edge"]] = relationship(
+        "Edge",
+        foreign_keys="Edge.from_scene_id",
+        back_populates="from_scene",
+        cascade="all, delete-orphan",
+    )
+    edges_to: Mapped[list["Edge"]] = relationship(
+        "Edge",
+        foreign_keys="Edge.to_scene_id",
+        back_populates="to_scene",
+        cascade="all, delete-orphan",
+    )
+
+
+class Edge(Base):
+    __tablename__ = "edges"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
+    from_scene_id: Mapped[int] = mapped_column(ForeignKey("scenes.id", ondelete="CASCADE"))
+    to_scene_id: Mapped[int] = mapped_column(ForeignKey("scenes.id", ondelete="CASCADE"))
+    cond: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    game: Mapped["Game"] = relationship("Game", back_populates="edges")
+    from_scene: Mapped["Scene"] = relationship(
+        "Scene", foreign_keys=[from_scene_id], back_populates="edges_from"
+    )
+    to_scene: Mapped["Scene"] = relationship(
+        "Scene", foreign_keys=[to_scene_id], back_populates="edges_to"
+    )
