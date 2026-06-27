@@ -19,18 +19,18 @@
         class="artifact-card"
         :class="{ 'is-attached': isAttached(artifact.id) }"
       >
-        <div class="card-thumb">
+        <div class="card-thumb" @click="inspectedArtifact = artifact">
           <img :src="`/uploads/${artifact.file_path}`" :alt="artifact.title" />
         </div>
-        <div class="card-top">
+        <div class="card-meta">
           <span class="type-tag" :class="artifact.type">
             {{ artifact.type === 'location_image' ? 'фон' : 'npc' }}
           </span>
+          <span class="card-title">{{ artifact.title || '—' }}</span>
           <button class="icon-btn danger" title="Удалить" @click="handleDelete(artifact.id)">
             ✕
           </button>
         </div>
-        <div class="card-title">{{ artifact.title || '—' }}</div>
         <div class="card-actions">
           <button
             v-if="currentSceneId"
@@ -51,6 +51,12 @@
       style="display: none"
       @change="handleFileSelected"
     />
+
+    <ArtifactInspector
+      v-if="inspectedArtifact"
+      :artifact="inspectedArtifact"
+      @close="inspectedArtifact = null"
+    />
   </div>
 </template>
 
@@ -58,6 +64,7 @@
 import { ref, computed } from 'vue'
 import { useArtifactsStore } from '../../stores/artifacts'
 import type { Artifact } from '../../api/artifacts'
+import ArtifactInspector from './ArtifactInspector.vue'
 
 const props = defineProps<{ currentSceneId: number | null }>()
 defineEmits<{ close: [] }>()
@@ -65,6 +72,7 @@ defineEmits<{ close: [] }>()
 const store = useArtifactsStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 const pendingType = ref<string>('location_image')
+const inspectedArtifact = ref<Artifact | null>(null)
 
 const attachedIds = computed(() => new Set(store.sceneLinks.map((l) => l.artifact_id)))
 
@@ -211,6 +219,11 @@ async function toggleAttach(artifact: Artifact) {
   overflow: hidden;
   background: var(--t0);
   flex-shrink: 0;
+  cursor: pointer;
+}
+
+.card-thumb:hover img {
+  opacity: 0.85;
 }
 
 .card-thumb img {
@@ -220,10 +233,10 @@ async function toggleAttach(artifact: Artifact) {
   display: block;
 }
 
-.card-top {
+.card-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
 }
 
 .type-tag {
@@ -259,16 +272,18 @@ async function toggleAttach(artifact: Artifact) {
 }
 
 .card-title {
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--t30);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+  min-width: 0;
 }
 
 .card-actions {
   margin-top: auto;
+  flex-shrink: 0;
 }
 
 .attach-btn {
