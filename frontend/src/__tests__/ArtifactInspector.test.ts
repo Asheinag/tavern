@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import ArtifactInspector from '../components/artifacts/ArtifactInspector.vue'
-import { useArtifactsStore } from '../stores/artifacts'
+
 
 vi.mock('../api/artifacts', () => ({
   artifactsApi: {
