@@ -8,9 +8,35 @@ ARTIFACT_TYPES = {"location_image", "npc"}
 NPC_POSITIONS = {"left", "center", "right"}
 
 
+class ArtifactRead(BaseModel):
+    id: int
+    owner_id: int
+    type: str
+    title: str
+    file_path: str
+    tags: list[str]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class ArtifactPatch(BaseModel):
     title: str | None = None
     tags: list[str] | None = None
+
+
+class SceneArtifactRead(BaseModel):
+    id: int
+    scene_id: int
+    artifact_id: int
+    is_active: bool
+    position: str | None
+    artifact: ArtifactRead
+
+    model_config = {"from_attributes": True}
+
+
+class SceneArtifactPatch(BaseModel):
     is_active: bool | None = None
     position: str | None = None
 
@@ -20,21 +46,6 @@ class ArtifactPatch(BaseModel):
         if v is not None and v not in NPC_POSITIONS:
             raise ValueError(f"position must be one of {NPC_POSITIONS}")
         return v
-
-
-class ArtifactRead(BaseModel):
-    id: int
-    game_id: int
-    scene_id: int
-    type: str
-    title: str
-    file_path: str
-    tags: list[str]
-    is_active: bool
-    position: str | None
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
 
 
 # ── Scene ─────────────────────────────────────────────────────────────────────

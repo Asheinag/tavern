@@ -5,7 +5,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db import Base, get_db
+from app.deps import current_user
 from app.main import app
+from app.models import User
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -53,3 +55,27 @@ async def client(db_session: AsyncSession, tmp_uploads: Path):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def app_with_user(db_session: AsyncSession, tmp_uploads: Path):
+    """Factory: returns (AsyncClient context manager, cleanup coroutine) for a given user."""
+
+    async def factory(user: User):
+        async def override_get_db():
+            yield db_session
+
+        async def override_current_user():
+            return user
+
+        app.dependency_overrides[get_db] = override_get_db
+        app.dependency_overrides[current_user] = override_current_user
+
+        ac = AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
+
+        async def cleanup():
+            app.dependency_overrides.pop(current_user, None)
+
+        return ac, cleanup
+
+    return factory
