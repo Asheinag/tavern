@@ -8,6 +8,9 @@ jobs:
   ci:
     name: CI
     uses: ./.github/workflows/ci.yml
+    permissions:
+      checks: write
+      pull-requests: write
 
   build-and-push:
     name: Build & push images
