@@ -29,6 +29,9 @@
       <div style="flex: 1"></div>
 
       <button class="btn-scene" @click="openAddScene">＋ Создать сцену</button>
+      <button class="btn-library" :class="{ active: libraryOpen }" @click="toggleLibrary">
+        Библиотека
+      </button>
 
       <div class="live-indicator">
         <span class="live-dot"></span>
@@ -73,6 +76,13 @@
       <div v-else-if="activeTab === 'map'" class="tab-stub">Вид «Карта» — скоро</div>
       <div v-else-if="activeTab === 'stage'" class="tab-stub">Вид «Сцена» — скоро</div>
 
+      <!-- ── Библиотека ── -->
+      <ArtifactLibrary
+        v-if="libraryOpen"
+        :current-scene-id="selectedId"
+        @close="libraryOpen = false"
+      />
+
       <!-- ── Инспектор ── -->
       <aside v-if="selectedScene" class="inspector">
         <div class="insp-head">
@@ -91,6 +101,10 @@
           <div class="insp-section">
             <div class="insp-label">Описание</div>
             <p class="insp-summary">{{ selectedScene.summary || 'Нет описания' }}</p>
+          </div>
+
+          <div class="insp-section">
+            <ArtifactPanel :scene-id="selectedScene.id" />
           </div>
 
           <div class="insp-section">
@@ -174,18 +188,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCampaignStore } from '../stores/campaign'
+import { useArtifactsStore } from '../stores/artifacts'
 import SceneNode from '../components/canvas/SceneNode.vue'
 import CanvasEdges from '../components/canvas/CanvasEdges.vue'
+import ArtifactLibrary from '../components/artifacts/ArtifactLibrary.vue'
+import ArtifactPanel from '../components/artifacts/ArtifactPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useCampaignStore()
+const artifactsStore = useArtifactsStore()
 
 const gameId = Number(route.params.id)
-onMounted(() => store.fetchGame(gameId))
+onMounted(() => {
+  store.fetchGame(gameId)
+  artifactsStore.fetchLibrary()
+})
 
 const tabs = [
   { key: 'schema', label: 'Схема' },
@@ -195,6 +216,19 @@ const tabs = [
 const activeTab = ref('schema')
 
 const selectedId = ref<number | null>(null)
+const libraryOpen = ref(false)
+
+function toggleLibrary() {
+  libraryOpen.value = !libraryOpen.value
+}
+
+watch(selectedId, (id) => {
+  if (id !== null) {
+    artifactsStore.fetchSceneArtifacts(id)
+  } else {
+    artifactsStore.clearSceneArtifacts()
+  }
+})
 
 const selectedScene = computed(
   () => store.currentGame?.scenes.find((s) => s.id === selectedId.value) ?? null,
@@ -390,6 +424,19 @@ async function onDeleteScene() {
   transition: border-color .12s, color .12s;
 }
 .btn-scene:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-library {
+  background: var(--t5);
+  border: 1px solid var(--t19);
+  color: var(--t29);
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: border-color .12s, color .12s;
+}
+.btn-library:hover { border-color: var(--accent); color: var(--accent); }
+.btn-library.active { border-color: var(--accentBd); color: var(--accent); background: var(--accentBg); }
 
 .live-indicator {
   display: flex;
