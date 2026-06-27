@@ -3,6 +3,7 @@
     class="node"
     :class="{ selected, [`status-${scene.status}`]: true }"
     :style="{ left: scene.x + 'px', top: scene.y + 'px' }"
+    @mousedown.stop="onMouseDown"
     @click.stop="$emit('select', scene.id)"
   >
     <div v-if="scene.color" class="color-bar" :style="{ background: scene.color }"></div>
@@ -19,8 +20,32 @@
 <script setup lang="ts">
 import type { Scene } from '../../api/games'
 
-defineProps<{ scene: Scene; selected: boolean }>()
-defineEmits<{ select: [id: number] }>()
+const props = defineProps<{ scene: Scene; selected: boolean }>()
+const emit = defineEmits<{
+  select: [id: number]
+  move: [id: number, x: number, y: number]
+}>()
+
+function onMouseDown(e: MouseEvent) {
+  if (e.button !== 0) return
+  const startX = e.clientX - props.scene.x
+  const startY = e.clientY - props.scene.y
+  let moved = false
+
+  function onMove(ev: MouseEvent) {
+    moved = true
+    emit('move', props.scene.id, ev.clientX - startX, ev.clientY - startY)
+  }
+
+  function onUp() {
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+    if (!moved) emit('select', props.scene.id)
+  }
+
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
+}
 </script>
 
 <style scoped>
@@ -31,11 +56,12 @@ defineEmits<{ select: [id: number] }>()
   border: 1px solid var(--t17);
   border-radius: 11px;
   padding: 14px 15px 13px;
-  cursor: pointer;
+  cursor: grab;
   transition: border-color .12s, box-shadow .12s;
   user-select: none;
 }
 
+.node:active { cursor: grabbing; }
 .node:hover { border-color: var(--t20); }
 
 .node.selected {

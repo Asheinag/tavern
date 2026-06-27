@@ -60,6 +60,7 @@
             :scene="scene"
             :selected="selectedId === scene.id"
             @select="selectedId = $event"
+            @move="onNodeMove"
           />
           <div v-if="!store.currentGame?.scenes.length" class="canvas-empty">
             <div class="canvas-empty-icon">🜂</div>
@@ -95,10 +96,41 @@
           <div class="insp-section">
             <div class="insp-label">Переходы из сцены</div>
             <div v-if="outEdges.length === 0" class="insp-empty">Нет переходов</div>
-            <div v-for="edge in outEdges" :key="edge.id" class="transition-row">
+            <div
+              v-for="edge in outEdges"
+              :key="edge.id"
+              class="transition-row"
+            >
               <span class="transition-arrow">→</span>
               <span class="transition-target">{{ sceneTitle(edge.to_scene_id) }}</span>
               <span v-if="edge.cond" class="transition-cond">{{ edge.cond }}</span>
+              <button
+                class="btn-edge-del"
+                title="Удалить переход"
+                @click="onDeleteEdge(edge.id)"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div class="edge-add-row">
+              <select v-model="newEdgeTargetId" class="edge-select">
+                <option :value="null" disabled>Выбрать цель…</option>
+                <option
+                  v-for="scene in edgeTargetOptions"
+                  :key="scene.id"
+                  :value="scene.id"
+                >
+                  {{ scene.title }}
+                </option>
+              </select>
+              <button
+                class="btn-add-edge"
+                :disabled="newEdgeTargetId === null || addingEdge"
+                @click="onAddEdge"
+              >
+                {{ addingEdge ? '…' : '+ Связь' }}
+              </button>
             </div>
           </div>
 
@@ -142,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCampaignStore } from '../stores/campaign'
 import SceneNode from '../components/canvas/SceneNode.vue'
@@ -172,6 +204,13 @@ const outEdges = computed(() =>
   store.currentGame?.edges.filter((e) => e.from_scene_id === selectedId.value) ?? [],
 )
 
+const edgeTargetOptions = computed(() => {
+  const existing = new Set(outEdges.value.map((e) => e.to_scene_id))
+  return (store.currentGame?.scenes ?? []).filter(
+    (s) => s.id !== selectedId.value && !existing.has(s.id),
+  )
+})
+
 function sceneTitle(id: number) {
   return store.currentGame?.scenes.find((s) => s.id === id)?.title ?? `#${id}`
 }
@@ -188,6 +227,44 @@ const canvasMinH = computed(() => {
   const scenes = store.currentGame?.scenes ?? []
   return scenes.length ? Math.max(...scenes.map((s) => s.y + 200)) : 500
 })
+
+// ── Drag ─────────────────────────────────────────────────────────────────────
+
+let moveTimer: ReturnType<typeof setTimeout> | null = null
+
+function onNodeMove(id: number, x: number, y: number) {
+  const scene = store.currentGame?.scenes.find((s) => s.id === id)
+  if (!scene) return
+  scene.x = Math.max(0, x)
+  scene.y = Math.max(0, y)
+
+  if (moveTimer) clearTimeout(moveTimer)
+  moveTimer = setTimeout(() => store.updateScene(id, { x: scene.x, y: scene.y }), 300)
+}
+
+onUnmounted(() => { if (moveTimer) clearTimeout(moveTimer) })
+
+// ── Рёбра ────────────────────────────────────────────────────────────────────
+
+const newEdgeTargetId = ref<number | null>(null)
+const addingEdge = ref(false)
+
+async function onAddEdge() {
+  if (!selectedId.value || newEdgeTargetId.value === null || addingEdge.value) return
+  addingEdge.value = true
+  try {
+    await store.addEdge(selectedId.value, newEdgeTargetId.value)
+    newEdgeTargetId.value = null
+  } finally {
+    addingEdge.value = false
+  }
+}
+
+async function onDeleteEdge(edgeId: number) {
+  await store.removeEdge(edgeId)
+}
+
+// ── Сцены ────────────────────────────────────────────────────────────────────
 
 const addSceneOpen = ref(false)
 const newSceneTitle = ref('')
@@ -475,7 +552,7 @@ async function onDeleteScene() {
 
 .transition-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   padding: 8px 11px;
   background: var(--t5);
@@ -485,6 +562,48 @@ async function onDeleteScene() {
 .transition-arrow { font-family: 'IBM Plex Mono', monospace; color: var(--t34); font-size: 11px; }
 .transition-target { flex: 1; font-size: 13px; font-weight: 500; color: var(--t30); }
 .transition-cond { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--t34); }
+
+.btn-edge-del {
+  background: none;
+  border: none;
+  color: var(--t34);
+  font-size: 13px;
+  padding: 2px 4px;
+  line-height: 1;
+  flex: none;
+}
+.btn-edge-del:hover { color: #c98a5a; }
+
+.edge-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.edge-select {
+  flex: 1;
+  background: var(--t5);
+  border: 1px solid var(--t17);
+  border-radius: 7px;
+  color: var(--t28);
+  font-size: 12.5px;
+  padding: 7px 10px;
+}
+.edge-select:focus { border-color: var(--t20); }
+
+.btn-add-edge {
+  background: var(--t5);
+  border: 1px solid var(--t19);
+  color: var(--t29);
+  border-radius: 7px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color .12s, color .12s;
+}
+.btn-add-edge:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn-add-edge:disabled { opacity: .5; cursor: not-allowed; }
 
 .btn-close {
   background: none;

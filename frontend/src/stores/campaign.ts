@@ -78,8 +78,21 @@ export const useCampaignStore = defineStore('campaign', () => {
     )
   }
 
+  async function addEdge(fromSceneId: number, toSceneId: number) {
+    if (!currentGame.value) return
+    const edge = await gamesApi.createEdge(currentGame.value.id, fromSceneId, toSceneId)
+    currentGame.value.edges.push(edge)
+  }
+
+  async function removeEdge(edgeId: number) {
+    await gamesApi.deleteEdge(edgeId)
+    if (!currentGame.value) return
+    currentGame.value.edges = currentGame.value.edges.filter((e) => e.id !== edgeId)
+  }
+
   return {
     games, loading, error, fetchGames, createGame, removeGame,
     currentGame, gameLoading, gameError, fetchGame, addScene, updateScene, removeScene,
+    addEdge, removeEdge,
   }
 })

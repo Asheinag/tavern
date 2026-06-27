@@ -68,4 +68,8 @@ export const gamesApi = {
   patchScene: (sceneId: number, data: ScenePatch) =>
     http.patch<Scene>(`/scenes/${sceneId}`, data).then((r) => r.data),
   deleteScene: (sceneId: number) => http.delete(`/scenes/${sceneId}`),
+
+  createEdge: (gameId: number, fromSceneId: number, toSceneId: number) =>
+    http.post<Edge>(`/games/${gameId}/edges`, { from_scene_id: fromSceneId, to_scene_id: toSceneId }).then((r) => r.data),
+  deleteEdge: (edgeId: number) => http.delete(`/edges/${edgeId}`),
 }
