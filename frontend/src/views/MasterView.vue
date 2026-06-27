@@ -74,7 +74,7 @@
 
       <!-- Вкладки-заглушки -->
       <div v-else-if="activeTab === 'map'" class="tab-stub">Вид «Карта» — скоро</div>
-      <div v-else-if="activeTab === 'stage'" class="tab-stub">Вид «Сцена» — скоро</div>
+      <SceneScreen v-else-if="activeTab === 'stage'" />
 
       <!-- ── Библиотека ── -->
       <ArtifactLibrary
@@ -197,6 +197,7 @@ import SceneNode from '../components/canvas/SceneNode.vue'
 import CanvasEdges from '../components/canvas/CanvasEdges.vue'
 import ArtifactLibrary from '../components/artifacts/ArtifactLibrary.vue'
 import ArtifactPanel from '../components/artifacts/ArtifactPanel.vue'
+import SceneScreen from '../components/player/SceneScreen.vue'
 
 const route = useRoute()
 const router = useRouter()
