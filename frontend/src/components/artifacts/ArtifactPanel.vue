@@ -44,11 +44,13 @@
 
 <script setup lang="ts">
 import { useArtifactsStore } from '../../stores/artifacts'
+import { useLiveStore } from '../../stores/live'
 import type { SceneArtifactLink } from '../../api/artifacts'
 
 const props = defineProps<{ sceneId: number }>()
 
 const store = useArtifactsStore()
+const liveStore = useLiveStore()
 
 const positions = [
   { value: 'left', label: 'слева' },
@@ -72,12 +74,26 @@ function actionTitle(link: SceneArtifactLink) {
 }
 
 async function handleActivate(link: SceneArtifactLink) {
-  await store.patchLink(props.sceneId, link.artifact_id, { is_active: !link.is_active })
+  const nowActive = !link.is_active
+  await store.patchLink(props.sceneId, link.artifact_id, { is_active: nowActive })
+
+  if (link.artifact.type === 'location_image') {
+    liveStore.send(nowActive ? 'show_bg' : 'clear_bg', nowActive ? { artId: link.artifact_id } : {})
+  } else if (link.artifact.type === 'npc') {
+    if (nowActive) {
+      liveStore.send('add_npc', { artId: link.artifact_id, side: link.position ?? 'left' })
+    } else {
+      liveStore.send('remove_npc', { artId: link.artifact_id })
+    }
+  }
 }
 
 async function handlePosition(link: SceneArtifactLink, pos: string) {
   if (link.position === pos) return
   await store.patchLink(props.sceneId, link.artifact_id, { position: pos })
+  if (link.is_active && link.artifact.type === 'npc') {
+    liveStore.send('add_npc', { artId: link.artifact_id, side: pos })
+  }
 }
 
 async function handleDetach(link: SceneArtifactLink) {

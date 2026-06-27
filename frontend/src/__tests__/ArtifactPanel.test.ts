@@ -2,7 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import { useArtifactsStore } from '../stores/artifacts'
+import { useLiveStore } from '../stores/live'
 import ArtifactPanel from '../components/artifacts/ArtifactPanel.vue'
+
+vi.mock('../api/ws', () => ({
+  createWsClient: vi.fn().mockReturnValue({
+    connect: vi.fn(),
+    send: vi.fn(),
+    disconnect: vi.fn(),
+  }),
+}))
 
 const mockLocationLink = {
   id: 10,
@@ -91,6 +100,48 @@ describe('ArtifactPanel', () => {
     await wrapper.find('.action-btn').trigger('click')
 
     expect(store.patchLink).toHaveBeenCalledWith(5, 1, { is_active: true })
+  })
+
+  it('sends show_bg WS event when activating location_image', async () => {
+    const store = useArtifactsStore()
+    store.sceneLinks = [mockLocationLink]
+    store.patchLink = vi.fn().mockResolvedValue({ ...mockLocationLink, is_active: true })
+    const liveStore = useLiveStore()
+    liveStore.send = vi.fn()
+
+    const wrapper = mountPanel()
+    await wrapper.find('.action-btn').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(liveStore.send).toHaveBeenCalledWith('show_bg', { artId: 1 })
+  })
+
+  it('sends clear_bg WS event when deactivating location_image', async () => {
+    const store = useArtifactsStore()
+    store.sceneLinks = [{ ...mockLocationLink, is_active: true }]
+    store.patchLink = vi.fn().mockResolvedValue({ ...mockLocationLink, is_active: false })
+    const liveStore = useLiveStore()
+    liveStore.send = vi.fn()
+
+    const wrapper = mountPanel()
+    await wrapper.find('.action-btn').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(liveStore.send).toHaveBeenCalledWith('clear_bg', {})
+  })
+
+  it('sends add_npc WS event when activating npc', async () => {
+    const store = useArtifactsStore()
+    store.sceneLinks = [{ ...mockNpcLink, position: 'left' }]
+    store.patchLink = vi.fn().mockResolvedValue({ ...mockNpcLink, is_active: true, position: 'left' })
+    const liveStore = useLiveStore()
+    liveStore.send = vi.fn()
+
+    const wrapper = mountPanel()
+    await wrapper.find('.action-btn').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(liveStore.send).toHaveBeenCalledWith('add_npc', { artId: 2, side: 'left' })
   })
 
   it('calls patchLink with position on position button click', async () => {

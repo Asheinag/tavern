@@ -20,6 +20,14 @@ vi.mock('../api/games', () => ({
   },
 }))
 
+vi.mock('../api/ws', () => ({
+  createWsClient: vi.fn().mockReturnValue({
+    connect: vi.fn(),
+    send: vi.fn(),
+    disconnect: vi.fn(),
+  }),
+}))
+
 vi.mock('../api/artifacts', () => ({
   artifactsApi: {
     upload: vi.fn(),
