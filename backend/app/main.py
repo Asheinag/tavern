@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import health
+from app.routers import edges, games, health, scenes
 
 app = FastAPI(title="Tavern API")
 
@@ -13,3 +13,6 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(games.router)
+app.include_router(scenes.router)
+app.include_router(edges.router)
