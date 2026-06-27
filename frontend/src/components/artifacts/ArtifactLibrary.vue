@@ -77,7 +77,8 @@ function triggerUpload(type: string) {
 async function handleFileSelected(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
-  await store.upload(file, pendingType.value)
+  const title = file.name.replace(/\.[^/.]+$/, '')
+  await store.upload(file, pendingType.value, title)
   ;(e.target as HTMLInputElement).value = ''
 }
 
