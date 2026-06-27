@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -40,6 +40,27 @@ class Game(Base):
     edges: Mapped[list["Edge"]] = relationship(
         "Edge", back_populates="game", cascade="all, delete-orphan"
     )
+    artifacts: Mapped[list["Artifact"]] = relationship(
+        "Artifact", back_populates="game", cascade="all, delete-orphan"
+    )
+
+
+class Artifact(Base):
+    __tablename__ = "artifacts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
+    scene_id: Mapped[int] = mapped_column(ForeignKey("scenes.id", ondelete="CASCADE"))
+    type: Mapped[str] = mapped_column(String(30))  # location_image | npc
+    title: Mapped[str] = mapped_column(String(200), default="")
+    file_path: Mapped[str] = mapped_column(Text)
+    tags: Mapped[list] = mapped_column(JSON, default=list)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    position: Mapped[str | None] = mapped_column(String(10), nullable=True)  # left|center|right
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    game: Mapped["Game"] = relationship("Game", back_populates="artifacts")
+    scene: Mapped["Scene"] = relationship("Scene", back_populates="artifacts")
 
 
 class Scene(Base):
@@ -58,6 +79,9 @@ class Scene(Base):
     row: Mapped[int] = mapped_column(Integer, default=0)
 
     game: Mapped["Game"] = relationship("Game", back_populates="scenes")
+    artifacts: Mapped[list["Artifact"]] = relationship(
+        "Artifact", back_populates="scene", cascade="all, delete-orphan"
+    )
     edges_from: Mapped[list["Edge"]] = relationship(
         "Edge",
         foreign_keys="Edge.from_scene_id",
