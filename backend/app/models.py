@@ -20,6 +20,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     games: Mapped[list["Game"]] = relationship("Game", back_populates="owner")
+    artifacts: Mapped[list["Artifact"]] = relationship("Artifact", back_populates="owner")
 
 
 class Game(Base):
@@ -40,27 +41,36 @@ class Game(Base):
     edges: Mapped[list["Edge"]] = relationship(
         "Edge", back_populates="game", cascade="all, delete-orphan"
     )
-    artifacts: Mapped[list["Artifact"]] = relationship(
-        "Artifact", back_populates="game", cascade="all, delete-orphan"
-    )
 
 
 class Artifact(Base):
     __tablename__ = "artifacts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
-    scene_id: Mapped[int] = mapped_column(ForeignKey("scenes.id", ondelete="CASCADE"))
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     type: Mapped[str] = mapped_column(String(30))  # location_image | npc
     title: Mapped[str] = mapped_column(String(200), default="")
     file_path: Mapped[str] = mapped_column(Text)
     tags: Mapped[list] = mapped_column(JSON, default=list)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
-    position: Mapped[str | None] = mapped_column(String(10), nullable=True)  # left|center|right
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
-    game: Mapped["Game"] = relationship("Game", back_populates="artifacts")
-    scene: Mapped["Scene"] = relationship("Scene", back_populates="artifacts")
+    owner: Mapped["User"] = relationship("User", back_populates="artifacts")
+    scene_links: Mapped[list["SceneArtifact"]] = relationship(
+        "SceneArtifact", back_populates="artifact", cascade="all, delete-orphan"
+    )
+
+
+class SceneArtifact(Base):
+    __tablename__ = "scene_artifacts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scene_id: Mapped[int] = mapped_column(ForeignKey("scenes.id", ondelete="CASCADE"))
+    artifact_id: Mapped[int] = mapped_column(ForeignKey("artifacts.id", ondelete="CASCADE"))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    position: Mapped[str | None] = mapped_column(String(10), nullable=True)  # left|center|right
+
+    scene: Mapped["Scene"] = relationship("Scene", back_populates="artifact_links")
+    artifact: Mapped["Artifact"] = relationship("Artifact", back_populates="scene_links")
 
 
 class Scene(Base):
@@ -79,8 +89,8 @@ class Scene(Base):
     row: Mapped[int] = mapped_column(Integer, default=0)
 
     game: Mapped["Game"] = relationship("Game", back_populates="scenes")
-    artifacts: Mapped[list["Artifact"]] = relationship(
-        "Artifact", back_populates="scene", cascade="all, delete-orphan"
+    artifact_links: Mapped[list["SceneArtifact"]] = relationship(
+        "SceneArtifact", back_populates="scene", cascade="all, delete-orphan"
     )
     edges_from: Mapped[list["Edge"]] = relationship(
         "Edge",
