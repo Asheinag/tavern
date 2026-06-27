@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
+from app.realtime.ws import router as ws_router
 from app.routers import artifacts, edges, games, health, scenes
 
 app = FastAPI(title="Tavern API")
@@ -22,3 +23,4 @@ app.include_router(games.router)
 app.include_router(scenes.router)
 app.include_router(edges.router)
 app.include_router(artifacts.router)
+app.include_router(ws_router)
