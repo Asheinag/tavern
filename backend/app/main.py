@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.routers import edges, games, health, scenes
+from app.config import settings
+from app.routers import artifacts, edges, games, health, scenes
 
 app = FastAPI(title="Tavern API")
 
@@ -12,7 +14,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.uploads_dir), name="uploads")
+
 app.include_router(health.router)
 app.include_router(games.router)
 app.include_router(scenes.router)
 app.include_router(edges.router)
+app.include_router(artifacts.router)

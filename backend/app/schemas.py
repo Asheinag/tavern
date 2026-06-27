@@ -1,6 +1,41 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+# ── Artifact ──────────────────────────────────────────────────────────────────
+
+ARTIFACT_TYPES = {"location_image", "npc"}
+NPC_POSITIONS = {"left", "center", "right"}
+
+
+class ArtifactPatch(BaseModel):
+    title: str | None = None
+    tags: list[str] | None = None
+    is_active: bool | None = None
+    position: str | None = None
+
+    @field_validator("position")
+    @classmethod
+    def validate_position(cls, v: str | None) -> str | None:
+        if v is not None and v not in NPC_POSITIONS:
+            raise ValueError(f"position must be one of {NPC_POSITIONS}")
+        return v
+
+
+class ArtifactRead(BaseModel):
+    id: int
+    game_id: int
+    scene_id: int
+    type: str
+    title: str
+    file_path: str
+    tags: list[str]
+    is_active: bool
+    position: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
 
 # ── Scene ─────────────────────────────────────────────────────────────────────
 

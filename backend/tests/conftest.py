@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -26,11 +28,24 @@ async def db_engine():
 async def db_session(db_engine):
     session_factory = async_sessionmaker(db_engine, expire_on_commit=False)
     async with session_factory() as session:
+        for table in reversed(Base.metadata.sorted_tables):
+            await session.execute(table.delete())
+        await session.commit()
         yield session
 
 
 @pytest.fixture
-async def client(db_session: AsyncSession):
+def tmp_uploads(tmp_path: Path, monkeypatch):
+    import app.config as cfg
+    import app.routers.artifacts as art_router
+
+    monkeypatch.setattr(cfg.settings, "uploads_dir", tmp_path)
+    monkeypatch.setattr(art_router, "settings", cfg.settings)
+    return tmp_path
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession, tmp_uploads: Path):
     async def override_get_db():
         yield db_session
 
