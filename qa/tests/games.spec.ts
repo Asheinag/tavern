@@ -10,28 +10,27 @@ test.describe('Список игр', () => {
     await page.goto('/')
 
     await page.getByRole('button', { name: '＋ Создать игру' }).first().click()
+    await page.locator('.modal .field-input').first().fill('Тестовая кампания')
+    await page.locator('.modal').getByRole('button', { name: 'Создать' }).click()
 
-    const titleInput = page.locator('.modal .field-input').first()
-    await titleInput.fill('Тестовая кампания')
-    await page.getByRole('button', { name: 'Создать' }).click()
-
-    await expect(page.locator('.card-title', { hasText: 'Тестовая кампания' })).toBeVisible()
+    await page.waitForURL(/\/master\/\d+/)
+    await page.goto('/')
+    await expect(page.locator('.card-title', { hasText: 'Тестовая кампания' }).first()).toBeVisible()
   })
 
   test('карточка игры ведёт в мастер-вью', async ({ page }) => {
     await page.goto('/')
 
-    // Создаём игру если список пуст
-    const cards = page.locator('.game-card')
-    if ((await cards.count()) === 0) {
+    if ((await page.locator('.game-card').count()) === 0) {
       await page.getByRole('button', { name: '＋ Создать игру' }).first().click()
       await page.locator('.modal .field-input').first().fill('Навигационная игра')
-      await page.getByRole('button', { name: 'Создать' }).click()
-      await expect(page.locator('.game-card')).toBeVisible()
+      await page.locator('.modal').getByRole('button', { name: 'Создать' }).click()
+      await page.waitForURL(/\/master\/\d+/)
+      await page.goto('/')
     }
 
     await page.locator('.game-card').first().click()
-    await expect(page).toHaveURL(/\/games\/\d+/)
+    await expect(page).toHaveURL(/\/master\/\d+/)
     await expect(page.locator('.topbar')).toBeVisible()
   })
 })

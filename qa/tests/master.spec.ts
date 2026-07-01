@@ -1,16 +1,12 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Мастер-вью', () => {
-  let gameUrl: string
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: '＋ Создать игру' }).first().click()
     await page.locator('.modal .field-input').first().fill('E2E Кампания')
-    await page.getByRole('button', { name: 'Создать' }).click()
-    await page.locator('.card-title', { hasText: 'E2E Кампания' }).click()
-    await page.waitForURL(/\/games\/\d+/)
-    gameUrl = page.url()
+    await page.locator('.modal').getByRole('button', { name: 'Создать' }).click()
+    await page.waitForURL(/\/master\/\d+/)
   })
 
   test('мастер-вью загружается с вкладками', async ({ page }) => {
@@ -22,7 +18,7 @@ test.describe('Мастер-вью', () => {
   test('создать сцену и увидеть на холсте', async ({ page }) => {
     await page.getByRole('button', { name: '＋ Создать сцену' }).click()
     await page.locator('.modal .field-input').fill('Таверна «Пьяный дракон»')
-    await page.getByRole('button', { name: 'Создать' }).click()
+    await page.locator('.modal').getByRole('button', { name: 'Создать' }).click()
 
     await expect(page.locator('.node-title', { hasText: 'Таверна «Пьяный дракон»' })).toBeVisible()
   })
