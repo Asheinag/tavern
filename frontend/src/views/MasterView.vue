@@ -75,6 +75,7 @@
       <!-- Вкладки-заглушки -->
       <div v-else-if="activeTab === 'map'" class="tab-stub">Вид «Карта» — скоро</div>
       <SceneScreen v-else-if="activeTab === 'stage'" />
+      <SessionLog v-else-if="activeTab === 'log'" :game-id="gameId" class="tab-full" />
 
       <!-- ── Библиотека ── -->
       <ArtifactLibrary
@@ -198,6 +199,7 @@ import CanvasEdges from '../components/canvas/CanvasEdges.vue'
 import ArtifactLibrary from '../components/artifacts/ArtifactLibrary.vue'
 import ArtifactPanel from '../components/artifacts/ArtifactPanel.vue'
 import SceneScreen from '../components/player/SceneScreen.vue'
+import SessionLog from '../components/master/SessionLog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -216,6 +218,7 @@ const tabs = [
   { key: 'schema', label: 'Схема' },
   { key: 'map', label: 'Карта' },
   { key: 'stage', label: 'Сцена' },
+  { key: 'log', label: 'Журнал' },
 ]
 const activeTab = ref('schema')
 
@@ -511,6 +514,11 @@ async function onDeleteScene() {
   color: var(--t34);
   font-size: 14px;
   font-family: 'IBM Plex Mono', monospace;
+}
+
+.tab-full {
+  flex: 1;
+  min-height: 0;
 }
 
 .canvas {
