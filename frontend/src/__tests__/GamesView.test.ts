@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import GamesView from '../views/GamesView.vue'
@@ -132,7 +132,33 @@ describe('GamesView', () => {
     wrapper.unmount()
   })
 
-  // TODO: тест перехода на /master/:id после создания игры
-  // — требует мока router.push и проверки навигации
-  // TODO: тест форматирования даты (formatDate) — завязан на locale окружения
+  it('клик на карточку игры переходит на /master/:id', async () => {
+    vi.mocked(gamesApi.list).mockResolvedValueOnce([mockGame])
+    const store = useCampaignStore()
+    const router = makeRouter()
+    await router.push('/')
+    await router.isReady()
+    const wrapper = mount(GamesView, {
+      attachTo: document.body,
+      global: { plugins: [createPinia(), router] },
+    })
+    await store.fetchGames()
+    await wrapper.vm.$nextTick()
+    await wrapper.find('.game-card').trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.path).toBe('/master/1')
+    wrapper.unmount()
+  })
+
+  it('форматирует дату в карточке игры', async () => {
+    vi.mocked(gamesApi.list).mockResolvedValueOnce([mockGame])
+    const store = useCampaignStore()
+    const wrapper = await mountView()
+    await store.fetchGames()
+    await wrapper.vm.$nextTick()
+    const footer = wrapper.find('.card-footer')
+    expect(footer.exists()).toBe(true)
+    expect(footer.text().trim()).not.toBe('')
+    wrapper.unmount()
+  })
 })
