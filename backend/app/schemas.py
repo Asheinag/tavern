@@ -141,3 +141,28 @@ class GameRead(BaseModel):
 class GameDetail(GameRead):
     scenes: list[SceneRead]
     edges: list[EdgeRead]
+
+
+class GameByCodeRead(BaseModel):
+    id: int
+    title: str
+
+    model_config = {"from_attributes": True}
+
+
+# ── SessionLog ────────────────────────────────────────────────────────────────
+
+
+class SessionLogRead(BaseModel):
+    id: int
+    game_id: int
+    ts: datetime
+    kind: str
+    text: str
+    scene_id: int | None
+
+    model_config = {"from_attributes": True}
+
+
+class SessionLogCreate(BaseModel):
+    text: str

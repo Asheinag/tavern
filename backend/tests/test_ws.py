@@ -1,15 +1,29 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 
+from app.db import get_db
 from app.main import app
 from app.realtime.rooms import Room, room_manager
 
 
 @pytest.fixture(autouse=True)
 def reset_rooms():
+    # WS эндпоинт использует get_db для записи в session_log.
+    # Мокаем сессию, чтобы тесты не требовали реальной БД.
+    mock_db = MagicMock()
+    mock_db.add = MagicMock()
+    mock_db.commit = AsyncMock()
+
+    async def _override():
+        yield mock_db
+
+    app.dependency_overrides[get_db] = _override
     room_manager.reset()
     yield
     room_manager.reset()
+    app.dependency_overrides.pop(get_db, None)
 
 
 # --- Unit: Room ---

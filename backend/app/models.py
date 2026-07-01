@@ -122,3 +122,16 @@ class Edge(Base):
     to_scene: Mapped["Scene"] = relationship(
         "Scene", foreign_keys=[to_scene_id], back_populates="edges_to"
     )
+
+
+class SessionLog(Base):
+    __tablename__ = "session_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    kind: Mapped[str] = mapped_column(String(20))  # move/show/roll/note
+    text: Mapped[str] = mapped_column(Text, default="")
+    scene_id: Mapped[int | None] = mapped_column(
+        ForeignKey("scenes.id", ondelete="SET NULL"), nullable=True
+    )
