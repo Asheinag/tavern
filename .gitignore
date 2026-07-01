@@ -2,6 +2,9 @@
 CLAUDE.md
 .claude/
 
+# Загруженные пользователем файлы (создаётся при запуске)
+backend/uploads/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
