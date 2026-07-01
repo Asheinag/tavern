@@ -18,8 +18,8 @@ export const useLiveStore = defineStore('live', () => {
   const connected = ref(false)
   let client: WsClientLike | null = null
 
-  function connect(gameId: number): void {
-    client = createWsClient(gameId, 'master', handleMessage)
+  function connect(gameId: number, role: 'master' | 'player' = 'master'): void {
+    client = createWsClient(gameId, role, handleMessage)
     client.connect()
   }
 

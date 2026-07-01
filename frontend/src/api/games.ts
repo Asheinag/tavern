@@ -57,11 +57,17 @@ export interface ScenePatch {
   y?: number
 }
 
+export interface GameByCode {
+  id: number
+  title: string
+}
+
 export const gamesApi = {
   list: () => http.get<Game[]>('/games').then((r) => r.data),
   create: (data: GameCreate) => http.post<Game>('/games', data).then((r) => r.data),
   remove: (id: number) => http.delete(`/games/${id}`),
   get: (id: number) => http.get<GameDetail>(`/games/${id}`).then((r) => r.data),
+  getByCode: (code: string) => http.get<GameByCode>(`/games/by-code/${code}`).then((r) => r.data),
 
   createScene: (gameId: number, data: SceneCreate) =>
     http.post<Scene>(`/games/${gameId}/scenes`, data).then((r) => r.data),
