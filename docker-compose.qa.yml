@@ -30,5 +30,15 @@ services:
     depends_on:
       - backend
 
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.50.0-noble
+    network_mode: host
+    working_dir: /qa
+    volumes:
+      - ./qa:/qa
+    command: bash -c "npm install --quiet && npx playwright test"
+    profiles:
+      - test
+
 volumes:
   postgres_qa_data:
