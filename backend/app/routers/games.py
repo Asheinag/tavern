@@ -8,9 +8,21 @@ from sqlalchemy.orm import selectinload
 from app.db import get_db
 from app.deps import current_user
 from app.models import Game, User
-from app.schemas import GameCreate, GameDetail, GamePatch, GameRead
+from app.schemas import GameByCodeRead, GameCreate, GameDetail, GamePatch, GameRead
 
 router = APIRouter(prefix="/api/games", tags=["games"])
+
+
+@router.get("/by-code/{share_code}", response_model=GameByCodeRead)
+async def get_game_by_code(
+    share_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Game).where(Game.share_code == share_code))
+    game = result.scalar_one_or_none()
+    if not game:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game not found")
+    return game
 
 
 @router.get("", response_model=list[GameRead])
