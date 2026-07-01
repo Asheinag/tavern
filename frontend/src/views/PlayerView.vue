@@ -9,7 +9,8 @@
     </div>
 
     <template v-else>
-      <SceneScreen class="player-screen" />
+      <SceneScreen class="player-screen" mode="player" />
+      <DetailPanel />
 
       <div v-if="!liveStore.connected" class="conn-badge">
         <span class="dot" />
@@ -23,6 +24,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import SceneScreen from '../components/player/SceneScreen.vue'
+import DetailPanel from '../components/player/DetailPanel.vue'
 import { gamesApi } from '../api/games'
 import { useArtifactsStore } from '../stores/artifacts'
 import { useLiveStore } from '../stores/live'
