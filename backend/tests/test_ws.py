@@ -95,7 +95,13 @@ def test_room_apply_clear_all():
     room.apply("add_npc", {"artId": 1, "side": "left"})
     room.apply("show_text", {"artId": 13})
     room.apply("clear_all", {})
-    assert room.live_state == {"bg": None, "npcs": [], "text": None, "sceneId": None, "sceneName": None}
+    assert room.live_state == {
+        "bg": None,
+        "npcs": [],
+        "text": None,
+        "sceneId": None,
+        "sceneName": None,
+    }
 
 
 def test_room_apply_scene_change():
