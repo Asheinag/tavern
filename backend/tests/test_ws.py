@@ -10,11 +10,15 @@ from app.realtime.rooms import Room, room_manager
 
 @pytest.fixture(autouse=True)
 def reset_rooms():
-    # WS эндпоинт использует get_db для записи в session_log.
+    # WS эндпоинт использует get_db для записи в session_log и резолва имён.
     # Мокаем сессию, чтобы тесты не требовали реальной БД.
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = "Тест"
+
     mock_db = MagicMock()
     mock_db.add = MagicMock()
     mock_db.commit = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=mock_result)
 
     async def _override():
         yield mock_db
