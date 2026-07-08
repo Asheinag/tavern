@@ -14,7 +14,7 @@ services:
       retries: 10
 
   backend:
-    image: ghcr.io/asheinag/tavern/backend:latest
+    image: ghcr.io/asheinag/tavern/backend:qa
     environment:
       DATABASE_URL: postgresql+asyncpg://tavern:tavern@db:5432/tavern
     ports:
@@ -24,7 +24,7 @@ services:
         condition: service_healthy
 
   frontend:
-    image: ghcr.io/asheinag/tavern/frontend:latest
+    image: ghcr.io/asheinag/tavern/frontend:qa
     ports:
       - "80:80"
     depends_on:

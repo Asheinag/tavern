@@ -1,0 +1,70 @@
+name: QA
+
+on:
+  push:
+    branches: [test]
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      checks: write
+      pull-requests: write
+
+  build-and-push:
+    name: Build & push QA images
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Lowercase repo name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Backend — build & push :qa
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          target: production
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ghcr.io/${{ env.REPO }}/backend:qa
+            ghcr.io/${{ env.REPO }}/backend:qa-${{ github.sha }}
+
+      - name: Frontend — build & push :qa
+        uses: docker/build-push-action@v7
+        with:
+          context: ./frontend
+          target: production
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ghcr.io/${{ env.REPO }}/frontend:qa
+            ghcr.io/${{ env.REPO }}/frontend:qa-${{ github.sha }}
+
+      - name: Summary
+        run: |
+          echo "## QA-образы опубликованы" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Образ | Теги |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| backend  | \`qa\`, \`qa-${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| frontend | \`qa\`, \`qa-${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Запусти стенд: \`docker compose -f docker-compose.qa.yml up -d\`" >> $GITHUB_STEP_SUMMARY
