@@ -3,7 +3,7 @@ from fastapi import WebSocket
 
 class Room:
     def __init__(self) -> None:
-        self.live_state: dict = {"bg": None, "npcs": [], "text": None}
+        self.live_state: dict = {"bg": None, "npcs": [], "text": None, "sceneId": None}
         self.connections: set[WebSocket] = set()
 
     def add(self, ws: WebSocket) -> None:
@@ -35,8 +35,12 @@ class Room:
             self.live_state["text"] = {"artId": payload["artId"]}
         elif event_type == "hide_text":
             self.live_state["text"] = None
+        elif event_type == "scene_change":
+            self.live_state["sceneId"] = payload.get("sceneId")
+        elif event_type == "clear_scene":
+            self.live_state["sceneId"] = None
         elif event_type == "clear_all":
-            self.live_state = {"bg": None, "npcs": [], "text": None}
+            self.live_state = {"bg": None, "npcs": [], "text": None, "sceneId": None}
 
     async def broadcast(self, message: dict) -> None:
         dead: set[WebSocket] = set()

@@ -225,6 +225,21 @@ describe('MasterView', () => {
     expect(wrapper.find('.transition-row').exists()).toBe(true)
   })
 
+  it('кнопка «Активировать сцену» отправляет scene_change через WS', async () => {
+    const { createWsClient } = await import('../api/ws')
+    const mockSend = vi.fn()
+    vi.mocked(createWsClient).mockReturnValue({ connect: vi.fn(), send: mockSend, disconnect: vi.fn() })
+
+    const { wrapper } = await mountView()
+    await wrapper.findAll('.node')[0].trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const btn = wrapper.find('.btn-activate')
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+    expect(mockSend).toHaveBeenCalledWith('scene_change', { sceneId: 10 })
+  })
+
   it('drag-start + drag-enter + mouseup создаёт ребро', async () => {
     vi.mocked(gamesApi.createEdge).mockResolvedValueOnce(
       { id: 99, game_id: 1, from_scene_id: 10, to_scene_id: 11, cond: null }

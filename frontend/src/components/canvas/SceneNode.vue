@@ -1,7 +1,7 @@
 <template>
   <div
     class="node"
-    :class="{ selected, [`status-${scene.status}`]: true }"
+    :class="{ selected, active, [`status-${scene.status}`]: true }"
     :style="{ left: scene.x + 'px', top: scene.y + 'px' }"
     @mousedown.stop="onMouseDown"
     @click.stop="$emit('select', scene.id)"
@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import type { Scene } from '../../api/games'
 
-const props = defineProps<{ scene: Scene; selected: boolean }>()
+const props = defineProps<{ scene: Scene; selected: boolean; active?: boolean }>()
 const emit = defineEmits<{
   select: [id: number]
   move: [id: number, x: number, y: number]
@@ -78,6 +78,11 @@ function onHandleMouseDown(e: MouseEvent) {
 .node.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.node.active {
+  border-color: #6fcf8a;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #6fcf8a 25%, transparent);
 }
 
 .color-bar {

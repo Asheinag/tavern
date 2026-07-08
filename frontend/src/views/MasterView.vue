@@ -67,6 +67,7 @@
             :key="scene.id"
             :scene="scene"
             :selected="selectedId === scene.id"
+            :active="liveStore.liveState.sceneId === scene.id"
             @select="selectedId = $event"
             @move="onNodeMove"
             @drag-start="onDragStart"
@@ -161,6 +162,23 @@
                 {{ addingEdge ? '…' : '+ Связь' }}
               </button>
             </div>
+          </div>
+
+          <div class="insp-section">
+            <button
+              v-if="liveStore.liveState.sceneId !== selectedScene.id"
+              class="btn-activate"
+              @click="activateScene(selectedScene.id)"
+            >
+              Активировать сцену
+            </button>
+            <button
+              v-else
+              class="btn-activate active"
+              @click="clearActiveScene"
+            >
+              ✓ Активна — сбросить
+            </button>
           </div>
 
           <div class="insp-section">
@@ -295,6 +313,14 @@ watch(selectedId, (id) => {
     summaryDraft.value = ''
   }
 })
+
+function activateScene(sceneId: number) {
+  liveStore.send('scene_change', { sceneId })
+}
+
+function clearActiveScene() {
+  liveStore.send('clear_scene')
+}
 
 async function saveSummary() {
   if (selectedId.value === null) return
@@ -775,6 +801,25 @@ async function onDeleteScene() {
   padding: 4px;
 }
 .btn-close:hover { color: var(--t28); }
+
+.btn-activate {
+  width: 100%;
+  background: var(--t5);
+  border: 1px solid var(--t19);
+  border-radius: 8px;
+  padding: 9px 14px;
+  color: var(--t29);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .12s, background .12s, color .12s;
+}
+.btn-activate:hover { border-color: var(--accent); color: var(--accent); }
+.btn-activate.active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .btn-delete {
   align-self: flex-start;

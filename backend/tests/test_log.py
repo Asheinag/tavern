@@ -86,7 +86,13 @@ async def test_log_text_hide_text():
 @pytest.mark.asyncio
 async def test_log_text_scene_change():
     text = await _log_text("scene_change", {"sceneId": 3}, _mock_db("Таверна"))
-    assert text == "Переход: Таверна"
+    assert text == "Активная сцена: Таверна"
+
+
+@pytest.mark.asyncio
+async def test_log_text_clear_scene():
+    text = await _log_text("clear_scene", {}, _mock_db())
+    assert text == "Активная сцена сброшена"
 
 
 @pytest.mark.asyncio

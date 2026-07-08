@@ -27,7 +27,7 @@ describe('useLiveStore', () => {
 
   it('initial state is empty', () => {
     const store = useLiveStore()
-    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null })
+    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null, sceneId: null })
     expect(store.connected).toBe(false)
   })
 
@@ -94,13 +94,29 @@ describe('useLiveStore', () => {
     expect(store.liveState.text).toBeNull()
   })
 
-  it('clear_all resets everything', () => {
+  it('scene_change event sets sceneId', () => {
+    const store = useLiveStore()
+    store.connect(1)
+    msg({ type: 'event', event: 'scene_change', payload: { sceneId: 5 } })
+    expect(store.liveState.sceneId).toBe(5)
+  })
+
+  it('clear_scene event clears sceneId', () => {
+    const store = useLiveStore()
+    store.connect(1)
+    msg({ type: 'event', event: 'scene_change', payload: { sceneId: 5 } })
+    msg({ type: 'event', event: 'clear_scene', payload: {} })
+    expect(store.liveState.sceneId).toBeNull()
+  })
+
+  it('clear_all resets everything including sceneId', () => {
     const store = useLiveStore()
     store.connect(1)
     msg({ type: 'event', event: 'show_bg', payload: { artId: 7 } })
     msg({ type: 'event', event: 'add_npc', payload: { artId: 8, side: 'left' } })
+    msg({ type: 'event', event: 'scene_change', payload: { sceneId: 3 } })
     msg({ type: 'event', event: 'clear_all', payload: {} })
-    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null })
+    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null, sceneId: null })
   })
 
   it('send calls WsClient.send', () => {
