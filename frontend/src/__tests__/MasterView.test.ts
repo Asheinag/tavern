@@ -10,6 +10,7 @@ vi.mock('../api/games', () => ({
   gamesApi: {
     list: vi.fn(),
     create: vi.fn(),
+    patch: vi.fn(),
     remove: vi.fn(),
     get: vi.fn(),
     createScene: vi.fn(),
@@ -122,11 +123,47 @@ describe('MasterView', () => {
     expect(wrapper.find('.insp-title').text()).toBe('Таверна')
   })
 
-  it('инспектор показывает описание сцены', async () => {
+  it('инспектор показывает описание сцены в textarea', async () => {
     const { wrapper } = await mountView()
     await wrapper.findAll('.node')[0].trigger('click')
     await wrapper.vm.$nextTick()
-    expect(wrapper.text()).toContain('Место встречи')
+    const textarea = wrapper.find<HTMLTextAreaElement>('.insp-summary-input')
+    expect(textarea.exists()).toBe(true)
+    expect(textarea.element.value).toBe('Место встречи')
+  })
+
+  it('blur на textarea вызывает updateScene с новым описанием', async () => {
+    vi.mocked(gamesApi.patchScene).mockResolvedValueOnce({ ...mockScene, summary: 'Новое описание' })
+    const { wrapper } = await mountView()
+    await wrapper.findAll('.node')[0].trigger('click')
+    await wrapper.vm.$nextTick()
+    const textarea = wrapper.find<HTMLTextAreaElement>('.insp-summary-input')
+    await textarea.setValue('Новое описание')
+    await textarea.trigger('blur')
+    await wrapper.vm.$nextTick()
+    expect(gamesApi.patchScene).toHaveBeenCalledWith(10, expect.objectContaining({ summary: 'Новое описание' }))
+  })
+
+  it('blur без изменений не вызывает updateScene', async () => {
+    const { wrapper } = await mountView()
+    await wrapper.findAll('.node')[0].trigger('click')
+    await wrapper.vm.$nextTick()
+    const textarea = wrapper.find('.insp-summary-input')
+    await textarea.trigger('blur')
+    await wrapper.vm.$nextTick()
+    expect(gamesApi.patchScene).not.toHaveBeenCalled()
+  })
+
+  it('смена сцены сбрасывает черновик описания', async () => {
+    const { wrapper } = await mountView()
+    await wrapper.findAll('.node')[0].trigger('click')
+    await wrapper.vm.$nextTick()
+    const textarea = wrapper.find<HTMLTextAreaElement>('.insp-summary-input')
+    await textarea.setValue('Черновик')
+    await wrapper.findAll('.node')[1].trigger('click')
+    await wrapper.vm.$nextTick()
+    const textarea2 = wrapper.find<HTMLTextAreaElement>('.insp-summary-input')
+    expect(textarea2.element.value).toBe(mockScene2.summary ?? '')
   })
 
   it('кнопка ✕ в инспекторе закрывает его', async () => {

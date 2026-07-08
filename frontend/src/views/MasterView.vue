@@ -101,7 +101,13 @@
         <div class="insp-scroll">
           <div class="insp-section">
             <div class="insp-label">Описание</div>
-            <p class="insp-summary">{{ selectedScene.summary || 'Нет описания' }}</p>
+            <textarea
+              v-model="summaryDraft"
+              class="insp-summary-input"
+              placeholder="Нет описания"
+              rows="4"
+              @blur="saveSummary"
+            />
           </div>
 
           <div class="insp-section">
@@ -229,13 +235,25 @@ function toggleLibrary() {
   libraryOpen.value = !libraryOpen.value
 }
 
+const summaryDraft = ref('')
+
 watch(selectedId, (id) => {
   if (id !== null) {
     artifactsStore.fetchSceneArtifacts(id)
+    summaryDraft.value = store.currentGame?.scenes.find((s) => s.id === id)?.summary ?? ''
   } else {
     artifactsStore.clearSceneArtifacts()
+    summaryDraft.value = ''
   }
 })
+
+async function saveSummary() {
+  if (selectedId.value === null) return
+  const scene = store.currentGame?.scenes.find((s) => s.id === selectedId.value)
+  if (scene && summaryDraft.value !== scene.summary) {
+    await store.updateScene(selectedId.value, { summary: summaryDraft.value })
+  }
+}
 
 const selectedScene = computed(
   () => store.currentGame?.scenes.find((s) => s.id === selectedId.value) ?? null,
@@ -620,11 +638,26 @@ async function onDeleteScene() {
   text-transform: uppercase;
 }
 
-.insp-summary {
-  margin: 0;
+.insp-summary-input {
+  width: 100%;
+  background: var(--t3);
+  border: 1px solid var(--t14);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--t30);
   font-size: 13.5px;
   line-height: 1.55;
-  color: var(--t30);
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color .12s;
+  box-sizing: border-box;
+}
+.insp-summary-input:focus {
+  border-color: var(--t20);
+  outline: none;
+}
+.insp-summary-input::placeholder {
+  color: var(--t34);
 }
 
 .insp-empty { font-size: 12.5px; color: var(--t34); font-style: italic; }
