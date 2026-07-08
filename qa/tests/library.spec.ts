@@ -45,13 +45,17 @@ test.describe('Библиотека артефактов', () => {
 
   test('счётчик библиотеки растёт после загрузки', async ({ page }) => {
     await page.locator('.btn-library').click()
-    await expect(page.locator('.mono-label')).toContainText('Библиотека · 0')
+
+    // читаем начальный счётчик
+    const label = page.locator('.mono-label')
+    const before = await label.textContent()
+    const beforeCount = parseInt(before?.match(/·\s*(\d+)/)?.[1] ?? '0')
 
     const fileChooserPromise = page.waitForEvent('filechooser')
     await page.locator('.add-btn', { hasText: '+ фон' }).click()
     const fileChooser = await fileChooserPromise
     await fileChooser.setFiles({ name: 'bg.png', mimeType: 'image/png', buffer: TINY_PNG })
 
-    await expect(page.locator('.mono-label')).toContainText('Библиотека · 1', { timeout: 10000 })
+    await expect(label).toContainText(`· ${beforeCount + 1}`, { timeout: 10000 })
   })
 })
