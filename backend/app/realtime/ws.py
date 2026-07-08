@@ -59,7 +59,9 @@ async def _log_text(event_type: str, payload: dict, db: AsyncSession) -> str:
             return "Экран очищен"
         case "scene_change":
             name = await _scene_title(payload.get("sceneId"), db)
-            return f"Переход: {name}"
+            return f"Активная сцена: {name}"
+        case "clear_scene":
+            return "Активная сцена сброшена"
         case "dice_roll":
             return f"Бросок d{payload.get('sides', '?')}: {payload.get('result', '?')}"
         case _:

@@ -10,6 +10,8 @@ EventType = Literal[
     "show_text",
     "hide_text",
     "clear_all",
+    "scene_change",
+    "clear_scene",
 ]
 
 

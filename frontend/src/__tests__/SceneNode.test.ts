@@ -68,6 +68,16 @@ describe('SceneNode', () => {
     expect(wrapper.classes()).toContain('status-available')
   })
 
+  it('добавляет класс active когда active=true', () => {
+    const wrapper = mount(SceneNode, { props: { scene, selected: false, active: true } })
+    expect(wrapper.classes()).toContain('active')
+  })
+
+  it('не добавляет класс active по умолчанию', () => {
+    const wrapper = mount(SceneNode, { props: { scene, selected: false } })
+    expect(wrapper.classes()).not.toContain('active')
+  })
+
   it('drag-handle присутствует в DOM', () => {
     const wrapper = mount(SceneNode, { props: { scene, selected: false } })
     expect(wrapper.find('.drag-handle').exists()).toBe(true)
