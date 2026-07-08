@@ -237,7 +237,7 @@ describe('MasterView', () => {
     const btn = wrapper.find('.btn-activate')
     expect(btn.exists()).toBe(true)
     await btn.trigger('click')
-    expect(mockSend).toHaveBeenCalledWith('scene_change', { sceneId: 10 })
+    expect(mockSend).toHaveBeenCalledWith('scene_change', { sceneId: 10, sceneName: 'Таверна' })
   })
 
   it('drag-start + drag-enter + mouseup создаёт ребро', async () => {
