@@ -26,11 +26,13 @@ async def create_edge(
     to_scene = await _get_scene_or_404(body.to_scene_id, game_id, db)
     edge = Edge(game_id=game_id, **body.model_dump())
     db.add(edge)
-    db.add(SessionLog(
-        game_id=game_id,
-        kind="move",
-        text=f"Связь: «{from_scene.title}» → «{to_scene.title}»",
-    ))
+    db.add(
+        SessionLog(
+            game_id=game_id,
+            kind="move",
+            text=f"Связь: «{from_scene.title}» → «{to_scene.title}»",
+        )
+    )
     await db.commit()
     await db.refresh(edge)
     return edge
@@ -60,11 +62,13 @@ async def delete_edge(
     edge = await _get_edge_or_404(edge_id, user.id, db)
     from_scene = await _get_scene_or_404(edge.from_scene_id, edge.game_id, db)
     to_scene = await _get_scene_or_404(edge.to_scene_id, edge.game_id, db)
-    db.add(SessionLog(
-        game_id=edge.game_id,
-        kind="move",
-        text=f"Связь удалена: «{from_scene.title}» → «{to_scene.title}»",
-    ))
+    db.add(
+        SessionLog(
+            game_id=edge.game_id,
+            kind="move",
+            text=f"Связь удалена: «{from_scene.title}» → «{to_scene.title}»",
+        )
+    )
     await db.delete(edge)
     await db.commit()
 
