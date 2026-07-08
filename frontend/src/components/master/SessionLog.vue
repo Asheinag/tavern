@@ -13,7 +13,7 @@
         @keydown.enter="submitNote"
       />
       <button class="btn-add" :disabled="!noteText.trim() || adding" @click="submitNote">
-        {{ adding ? '…' : '＋' }}
+        {{ adding ? '…' : '+' }}
       </button>
     </div>
 
