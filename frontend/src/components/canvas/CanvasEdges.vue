@@ -4,7 +4,11 @@
       <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
         <path d="M0,0 L0,6 L8,3 z" fill="var(--t20)" />
       </marker>
+      <marker id="arrow-preview" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="var(--accent)" />
+      </marker>
     </defs>
+
     <g v-for="edge in edges" :key="edge.id">
       <line
         v-if="getEdgePoints(edge.from_scene_id, edge.to_scene_id)"
@@ -16,6 +20,17 @@
         marker-end="url(#arrow)"
       />
     </g>
+
+    <!-- preview-линия при drag-to-connect -->
+    <line
+      v-if="dragFrom != null && dragPos && dragStartPoint"
+      :x1="dragStartPoint.x"
+      :y1="dragStartPoint.y"
+      :x2="dragPos.x"
+      :y2="dragPos.y"
+      class="edge-preview"
+      marker-end="url(#arrow-preview)"
+    />
   </svg>
 </template>
 
@@ -25,9 +40,14 @@ import type { Scene, Edge } from '../../api/games'
 
 const NODE_W = 184
 const NODE_H = 80
-const MARGIN = 6 // зазор между стрелкой и границей ноды
+const MARGIN = 6
 
-const props = defineProps<{ scenes: Scene[]; edges: Edge[] }>()
+const props = defineProps<{
+  scenes: Scene[]
+  edges: Edge[]
+  dragFrom?: number | null
+  dragPos?: { x: number; y: number } | null
+}>()
 
 const svgWidth = computed(() =>
   props.scenes.length ? Math.max(...props.scenes.map((s) => s.x + NODE_W + 80)) : 800,
@@ -42,7 +62,6 @@ function getCenter(sceneId: number) {
   return { x: s.x + NODE_W / 2, y: s.y + NODE_H / 2 }
 }
 
-// Возвращает точку на границе прямоугольника ноды в направлении от (cx,cy) к (ox,oy)
 function borderPoint(sceneId: number, ox: number, oy: number) {
   const s = props.scenes.find((sc) => sc.id === sceneId)
   if (!s) return null
@@ -54,8 +73,6 @@ function borderPoint(sceneId: number, ox: number, oy: number) {
 
   const hw = NODE_W / 2 + MARGIN
   const hh = NODE_H / 2 + MARGIN
-
-  // масштаб до пересечения с горизонтальной или вертикальной стенкой
   const tx = dx !== 0 ? hw / Math.abs(dx) : Infinity
   const ty = dy !== 0 ? hh / Math.abs(dy) : Infinity
   const t = Math.min(tx, ty)
@@ -74,6 +91,11 @@ function getEdgePoints(fromId: number, toId: number) {
 
   return { x1: start.x, y1: start.y, x2: end.x, y2: end.y }
 }
+
+const dragStartPoint = computed(() => {
+  if (props.dragFrom == null || !props.dragPos) return null
+  return borderPoint(props.dragFrom, props.dragPos.x, props.dragPos.y)
+})
 </script>
 
 <style scoped>
@@ -87,5 +109,12 @@ function getEdgePoints(fromId: number, toId: number) {
 .edge-line {
   stroke: var(--t20);
   stroke-width: 1.5;
+}
+
+.edge-preview {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  opacity: 0.7;
 }
 </style>

@@ -5,6 +5,8 @@
     :style="{ left: scene.x + 'px', top: scene.y + 'px' }"
     @mousedown.stop="onMouseDown"
     @click.stop="$emit('select', scene.id)"
+    @mouseenter="$emit('drag-enter', scene.id)"
+    @mouseleave="$emit('drag-leave', scene.id)"
   >
     <div v-if="scene.color" class="color-bar" :style="{ background: scene.color }"></div>
     <div class="node-head">
@@ -14,6 +16,7 @@
     <div class="node-meta">
       <span class="node-type">{{ scene.type || 'Сцена' }}</span>
     </div>
+    <div class="drag-handle" title="Тянуть для создания связи" @mousedown.stop="onHandleMouseDown" />
   </div>
 </template>
 
@@ -24,6 +27,9 @@ const props = defineProps<{ scene: Scene; selected: boolean }>()
 const emit = defineEmits<{
   select: [id: number]
   move: [id: number, x: number, y: number]
+  'drag-start': [id: number]
+  'drag-enter': [id: number]
+  'drag-leave': [id: number]
 }>()
 
 function onMouseDown(e: MouseEvent) {
@@ -45,6 +51,11 @@ function onMouseDown(e: MouseEvent) {
 
   window.addEventListener('mousemove', onMove)
   window.addEventListener('mouseup', onUp)
+}
+
+function onHandleMouseDown(e: MouseEvent) {
+  if (e.button !== 0) return
+  emit('drag-start', props.scene.id)
 }
 </script>
 
@@ -120,4 +131,21 @@ function onMouseDown(e: MouseEvent) {
   border-radius: 4px;
   padding: 1px 5px;
 }
+
+.drag-handle {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--t1);
+  cursor: crosshair;
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.node:hover .drag-handle { opacity: 1; }
 </style>
