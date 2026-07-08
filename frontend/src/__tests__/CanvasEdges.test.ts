@@ -85,4 +85,23 @@ describe('CanvasEdges', () => {
     expect(wrapper.find('defs').exists()).toBe(true)
     expect(wrapper.find('marker#arrow').exists()).toBe(true)
   })
+
+  it('рендерит preview-линию при dragFrom + dragPos', () => {
+    const scenes = [makeScene(1, 0, 0), makeScene(2, 400, 0)]
+    const wrapper = mount(CanvasEdges, {
+      props: { scenes, edges: [], dragFrom: 1, dragPos: { x: 300, y: 150 } },
+    })
+    const lines = wrapper.findAll('line')
+    expect(lines.length).toBe(1)
+    expect(lines[0].classes()).toContain('edge-preview')
+    expect(lines[0].attributes('marker-end')).toBe('url(#arrow-preview)')
+  })
+
+  it('не рендерит preview-линию без dragPos', () => {
+    const scenes = [makeScene(1, 0, 0)]
+    const wrapper = mount(CanvasEdges, {
+      props: { scenes, edges: [], dragFrom: 1, dragPos: null },
+    })
+    expect(wrapper.find('.edge-preview').exists()).toBe(false)
+  })
 })

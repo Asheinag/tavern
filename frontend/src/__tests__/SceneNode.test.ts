@@ -68,6 +68,32 @@ describe('SceneNode', () => {
     expect(wrapper.classes()).toContain('status-available')
   })
 
+  it('drag-handle присутствует в DOM', () => {
+    const wrapper = mount(SceneNode, { props: { scene, selected: false } })
+    expect(wrapper.find('.drag-handle').exists()).toBe(true)
+  })
+
+  it('mousedown на drag-handle эмитит drag-start с id сцены', async () => {
+    const wrapper = mount(SceneNode, { props: { scene, selected: false } })
+    await wrapper.find('.drag-handle').trigger('mousedown', { button: 0 })
+    expect(wrapper.emitted('drag-start')).toBeTruthy()
+    expect(wrapper.emitted('drag-start')![0]).toEqual([1])
+  })
+
+  it('mouseenter на ноде эмитит drag-enter', async () => {
+    const wrapper = mount(SceneNode, { props: { scene, selected: false } })
+    await wrapper.trigger('mouseenter')
+    expect(wrapper.emitted('drag-enter')).toBeTruthy()
+    expect(wrapper.emitted('drag-enter')![0]).toEqual([1])
+  })
+
+  it('mouseleave на ноде эмитит drag-leave', async () => {
+    const wrapper = mount(SceneNode, { props: { scene, selected: false } })
+    await wrapper.trigger('mouseleave')
+    expect(wrapper.emitted('drag-leave')).toBeTruthy()
+    expect(wrapper.emitted('drag-leave')![0]).toEqual([1])
+  })
+
   // TODO: тест drag — эмит move при перемещении мыши после mousedown
   // Требует симуляции mousemove на window, сложно в jsdom без реального layout
 })

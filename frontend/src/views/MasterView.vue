@@ -48,14 +48,19 @@
       <!-- Вкладка Схема -->
       <template v-else-if="activeTab === 'schema'">
         <div
+          ref="canvasRef"
           class="canvas"
           :style="{ minWidth: canvasMinW + 'px', minHeight: canvasMinH + 'px' }"
+          :class="{ 'drag-active': dragFrom !== null }"
           @click="selectedId = null"
+          @mousemove="onCanvasMouseMove"
         >
           <CanvasEdges
             v-if="store.currentGame"
             :scenes="store.currentGame.scenes"
             :edges="store.currentGame.edges"
+            :drag-from="dragFrom"
+            :drag-pos="dragPos"
           />
           <SceneNode
             v-for="scene in store.currentGame?.scenes"
@@ -64,6 +69,9 @@
             :selected="selectedId === scene.id"
             @select="selectedId = $event"
             @move="onNodeMove"
+            @drag-start="onDragStart"
+            @drag-enter="onDragEnter"
+            @drag-leave="onDragLeave"
           />
           <div v-if="!store.currentGame?.scenes.length" class="canvas-empty">
             <div class="canvas-empty-icon">🜂</div>
@@ -230,6 +238,47 @@ const activeTab = ref('schema')
 
 const selectedId = ref<number | null>(null)
 const libraryOpen = ref(false)
+
+// ── Drag-to-connect ───────────────────────────────────────────────────────────
+const canvasRef = ref<HTMLElement | null>(null)
+const dragFrom = ref<number | null>(null)
+const dragPos = ref<{ x: number; y: number } | null>(null)
+const dragOver = ref<number | null>(null)
+
+function onDragStart(sceneId: number) {
+  dragFrom.value = sceneId
+  dragPos.value = null
+  dragOver.value = null
+
+  function onMouseUp() {
+    if (dragFrom.value !== null && dragOver.value !== null && dragOver.value !== dragFrom.value) {
+      store.addEdge(dragFrom.value, dragOver.value)
+    }
+    dragFrom.value = null
+    dragPos.value = null
+    dragOver.value = null
+    document.removeEventListener('mouseup', onMouseUp)
+  }
+
+  document.addEventListener('mouseup', onMouseUp)
+}
+
+function onCanvasMouseMove(e: MouseEvent) {
+  if (dragFrom.value === null || !canvasRef.value) return
+  const rect = canvasRef.value.getBoundingClientRect()
+  dragPos.value = {
+    x: e.clientX - rect.left + canvasRef.value.scrollLeft,
+    y: e.clientY - rect.top + canvasRef.value.scrollTop,
+  }
+}
+
+function onDragEnter(sceneId: number) {
+  if (dragFrom.value !== null) dragOver.value = sceneId
+}
+
+function onDragLeave(sceneId: number) {
+  if (dragOver.value === sceneId) dragOver.value = null
+}
 
 function toggleLibrary() {
   libraryOpen.value = !libraryOpen.value
@@ -545,6 +594,7 @@ async function onDeleteScene() {
   position: relative;
   background: var(--t0);
 }
+.canvas.drag-active { cursor: crosshair; }
 
 .canvas-empty {
   position: absolute;

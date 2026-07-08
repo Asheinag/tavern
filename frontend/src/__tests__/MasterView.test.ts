@@ -225,6 +225,36 @@ describe('MasterView', () => {
     expect(wrapper.find('.transition-row').exists()).toBe(true)
   })
 
+  it('drag-start + drag-enter + mouseup создаёт ребро', async () => {
+    vi.mocked(gamesApi.createEdge).mockResolvedValueOnce(
+      { id: 99, game_id: 1, from_scene_id: 10, to_scene_id: 11, cond: null }
+    )
+    const { wrapper } = await mountView()
+    const nodes = wrapper.findAll('.node')
+
+    // начинаем drag с первой ноды
+    await nodes[0].find('.drag-handle').trigger('mousedown', { button: 0 })
+    // входим на вторую ноду
+    await nodes[1].trigger('mouseenter')
+    // отпускаем мышь
+    document.dispatchEvent(new MouseEvent('mouseup'))
+    await wrapper.vm.$nextTick()
+
+    expect(gamesApi.createEdge).toHaveBeenCalledWith(1, 10, 11)
+  })
+
+  it('drag на ту же ноду не создаёт ребро', async () => {
+    const { wrapper } = await mountView()
+    const nodes = wrapper.findAll('.node')
+
+    await nodes[0].find('.drag-handle').trigger('mousedown', { button: 0 })
+    await nodes[0].trigger('mouseenter')
+    document.dispatchEvent(new MouseEvent('mouseup'))
+    await wrapper.vm.$nextTick()
+
+    expect(gamesApi.createEdge).not.toHaveBeenCalled()
+  })
+
   // TODO: тест удаления сцены — требует мока window.confirm
   // TODO: тест удаления ребра — аналогично
   // TODO: тест добавления ребра через select в инспекторе
