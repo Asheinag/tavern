@@ -8,7 +8,7 @@
           <div class="header-name">Добро пожаловать, Мастер</div>
           <div class="header-sub">{{ store.games.length }} кампаний</div>
         </div>
-        <button class="btn-primary" @click="openCreate">＋ Создать игру</button>
+        <button class="btn-primary" @click="openCreate">+ Создать игру</button>
       </div>
 
       <div class="section-label">Мои кампании</div>
@@ -29,7 +29,7 @@
         <p class="empty-desc">
           Создай свою первую кампанию как мастер или присоединись к чужой игре по коду от ведущего.
         </p>
-        <button class="btn-primary" @click="openCreate">＋ Создать игру</button>
+        <button class="btn-primary" @click="openCreate">+ Создать игру</button>
       </div>
 
       <!-- сетка игр -->

@@ -28,7 +28,7 @@
 
       <div style="flex: 1"></div>
 
-      <button class="btn-scene" @click="openAddScene">＋ Создать сцену</button>
+      <button class="btn-scene" @click="openAddScene">+ Создать сцену</button>
       <button class="btn-library" :class="{ active: libraryOpen }" @click="toggleLibrary">
         Библиотека
       </button>
