@@ -55,6 +55,15 @@ describe('gamesApi', () => {
     expect(result).toEqual(mockGame)
   })
 
+  it('patch — PATCH /games/:id', async () => {
+    const updated = { ...mockGame, title: 'Новое название', cover: 'https://example.com/img.jpg' }
+    vi.mocked(http.patch).mockResolvedValueOnce({ data: updated })
+    const result = await gamesApi.patch(1, { title: 'Новое название', cover: 'https://example.com/img.jpg' })
+    expect(http.patch).toHaveBeenCalledWith('/games/1', { title: 'Новое название', cover: 'https://example.com/img.jpg' })
+    expect(result.title).toBe('Новое название')
+    expect(result.cover).toBe('https://example.com/img.jpg')
+  })
+
   it('remove — DELETE /games/:id', async () => {
     vi.mocked(http.delete).mockResolvedValueOnce({ data: undefined })
     await gamesApi.remove(1)
