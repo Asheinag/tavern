@@ -44,16 +44,18 @@ describe('CanvasEdges', () => {
     expect(wrapper.findAll('line')).toHaveLength(2)
   })
 
-  it('линия идёт от центра from-сцены к центру to-сцены', () => {
-    // NODE_W=184, NODE_H=80 → центр сцены на (0,0) = (92, 40)
-    const scenes = [makeScene(1, 0, 0), makeScene(2, 200, 100)]
+  it('линия начинается на границе from-ноды и заканчивается на границе to-ноды', () => {
+    // NODE_W=184, NODE_H=80, MARGIN=6
+    // центр сцены 1 (x=0,y=0): (92, 40), центр сцены 2 (x=400,y=0): (492, 40)
+    // горизонтальная линия → пересекаем вертикальную стенку: hw=92+6=98
+    const scenes = [makeScene(1, 0, 0), makeScene(2, 400, 0)]
     const edges = [makeEdge(1, 1, 2)]
     const wrapper = mount(CanvasEdges, { props: { scenes, edges } })
     const line = wrapper.find('line')
-    expect(line.attributes('x1')).toBe('92')
-    expect(line.attributes('y1')).toBe('40')
-    expect(line.attributes('x2')).toBe('292') // 200 + 92
-    expect(line.attributes('y2')).toBe('140') // 100 + 40
+    expect(Number(line.attributes('x1'))).toBeCloseTo(92 + 98)   // 190
+    expect(Number(line.attributes('y1'))).toBeCloseTo(40)
+    expect(Number(line.attributes('x2'))).toBeCloseTo(492 - 98)  // 394
+    expect(Number(line.attributes('y2'))).toBeCloseTo(40)
   })
 
   it('не рендерит линию если одна из сцен не найдена', () => {
