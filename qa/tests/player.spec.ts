@@ -13,7 +13,7 @@ test.describe('Экран игрока', () => {
     const game = await resp.json()
 
     const playerPage = await context.newPage()
-    await playerPage.goto(`/player/${game.share_code}`)
+    await playerPage.goto(`/play/${game.share_code}`)
 
     // ждём пока страница перейдёт из «Подключение…» в готовое состояние
     await expect(playerPage.locator('.scene-screen')).toBeVisible({ timeout: 15000 })
@@ -32,7 +32,7 @@ test.describe('Экран игрока', () => {
     const game = await resp.json()
 
     const playerPage = await context.newPage()
-    await playerPage.goto(`/player/${game.share_code}`)
+    await playerPage.goto(`/play/${game.share_code}`)
 
     // ждём загрузки экрана, затем проверяем плейсхолдер
     await expect(playerPage.locator('.scene-screen')).toBeVisible({ timeout: 15000 })
