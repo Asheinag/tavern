@@ -70,6 +70,17 @@ describe('CanvasEdges', () => {
     expect(width).toBeGreaterThan(500)
   })
 
-  // TODO: тест стрелки (marker-end) — требует проверки SVG defs в jsdom,
-  // которая ненадёжна из-за неполной поддержки SVG
+  it('каждая линия имеет marker-end для стрелки', () => {
+    const scenes = [makeScene(1, 0, 0), makeScene(2, 200, 0)]
+    const edges = [makeEdge(1, 1, 2)]
+    const wrapper = mount(CanvasEdges, { props: { scenes, edges } })
+    const line = wrapper.find('line')
+    expect(line.attributes('marker-end')).toBe('url(#arrow)')
+  })
+
+  it('SVG содержит определение маркера-стрелки', () => {
+    const wrapper = mount(CanvasEdges, { props: { scenes: [], edges: [] } })
+    expect(wrapper.find('defs').exists()).toBe(true)
+    expect(wrapper.find('marker#arrow').exists()).toBe(true)
+  })
 })
