@@ -33,7 +33,7 @@
         Библиотека
       </button>
 
-      <div class="live-indicator" :class="{ active: liveStore.connected && !!liveStore.liveState.bg }">
+      <div class="live-indicator" :class="{ active: liveStore.connected && (!!liveStore.liveState.bg || !!liveStore.liveState.sceneId) }">
         <span class="live-dot"></span>
         <span class="live-label">{{ liveLabel }}</span>
       </div>
@@ -315,7 +315,8 @@ watch(selectedId, (id) => {
 })
 
 function activateScene(sceneId: number) {
-  liveStore.send('scene_change', { sceneId })
+  const scene = store.currentGame?.scenes.find((s) => s.id === sceneId)
+  liveStore.send('scene_change', { sceneId, sceneName: scene?.title ?? '' })
 }
 
 function clearActiveScene() {
@@ -355,7 +356,7 @@ function statusLabel(s: string) {
 
 const liveLabel = computed(() => {
   if (!liveStore.connected) return 'Не подключено'
-  if (liveStore.liveState.bg) return 'В эфире'
+  if (liveStore.liveState.bg || liveStore.liveState.sceneId) return 'В эфире'
   return 'Экран затемнён'
 })
 

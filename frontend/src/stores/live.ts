@@ -12,10 +12,11 @@ export interface LiveState {
   npcs: NpcSlot[]
   text: { artId: number } | null
   sceneId: number | null
+  sceneName: string | null
 }
 
 export const useLiveStore = defineStore('live', () => {
-  const liveState = ref<LiveState>({ bg: null, npcs: [], text: null, sceneId: null })
+  const liveState = ref<LiveState>({ bg: null, npcs: [], text: null, sceneId: null, sceneName: null })
   const connected = ref(false)
   let client: WsClientLike | null = null
 
@@ -28,7 +29,7 @@ export const useLiveStore = defineStore('live', () => {
     client?.disconnect()
     client = null
     connected.value = false
-    liveState.value = { bg: null, npcs: [], text: null, sceneId: null }
+    liveState.value = { bg: null, npcs: [], text: null, sceneId: null, sceneName: null }
   }
 
   function send(type: string, payload: Record<string, unknown> = {}): void {
@@ -64,10 +65,12 @@ export const useLiveStore = defineStore('live', () => {
       liveState.value.text = null
     } else if (event === 'scene_change') {
       liveState.value.sceneId = payload.sceneId as number
+      liveState.value.sceneName = (payload.sceneName as string) ?? null
     } else if (event === 'clear_scene') {
       liveState.value.sceneId = null
+      liveState.value.sceneName = null
     } else if (event === 'clear_all') {
-      liveState.value = { bg: null, npcs: [], text: null, sceneId: null }
+      liveState.value = { bg: null, npcs: [], text: null, sceneId: null, sceneName: null }
     }
   }
 

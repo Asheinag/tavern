@@ -27,7 +27,7 @@ describe('useLiveStore', () => {
 
   it('initial state is empty', () => {
     const store = useLiveStore()
-    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null, sceneId: null })
+    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null, sceneId: null, sceneName: null })
     expect(store.connected).toBe(false)
   })
 
@@ -114,9 +114,9 @@ describe('useLiveStore', () => {
     store.connect(1)
     msg({ type: 'event', event: 'show_bg', payload: { artId: 7 } })
     msg({ type: 'event', event: 'add_npc', payload: { artId: 8, side: 'left' } })
-    msg({ type: 'event', event: 'scene_change', payload: { sceneId: 3 } })
+    msg({ type: 'event', event: 'scene_change', payload: { sceneId: 3, sceneName: 'Лес' } })
     msg({ type: 'event', event: 'clear_all', payload: {} })
-    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null, sceneId: null })
+    expect(store.liveState).toEqual({ bg: null, npcs: [], text: null, sceneId: null, sceneName: null })
   })
 
   it('send calls WsClient.send', () => {

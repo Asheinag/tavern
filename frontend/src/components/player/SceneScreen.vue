@@ -43,11 +43,12 @@
       <!-- Нижний градиент с названием сцены -->
       <div class="bottom-bar">
         <span v-if="bgArtifact" class="scene-label">{{ bgArtifact.title }}</span>
+        <span v-else-if="liveStore.liveState.sceneName" class="scene-label">{{ liveStore.liveState.sceneName }}</span>
         <span v-else class="scene-label dim">Экран затемнён</span>
       </div>
 
-      <!-- Плейсхолдер когда всё пусто -->
-      <div v-if="isEmpty" class="empty-overlay">
+      <!-- Плейсхолдер когда всё пусто и нет активной сцены -->
+      <div v-if="isEmpty && !liveStore.liveState.sceneId" class="empty-overlay">
         <span class="empty-label">Экран затемнён</span>
       </div>
 
