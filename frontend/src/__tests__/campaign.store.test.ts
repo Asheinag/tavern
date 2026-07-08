@@ -7,6 +7,7 @@ vi.mock('../api/games', () => ({
   gamesApi: {
     list: vi.fn(),
     create: vi.fn(),
+    patch: vi.fn(),
     remove: vi.fn(),
     get: vi.fn(),
     createScene: vi.fn(),
@@ -74,6 +75,27 @@ describe('useCampaignStore', () => {
     const result = await store.createGame({ title: 'Тест' })
     expect(result.id).toBe(1)
     expect(store.games).toHaveLength(1)
+  })
+
+  it('updateGame — обновляет игру в списке', async () => {
+    vi.mocked(gamesApi.list).mockResolvedValueOnce([mockGame])
+    const updated = { ...mockGame, title: 'Новое', cover: 'https://img.test/1.jpg' }
+    vi.mocked(gamesApi.patch).mockResolvedValueOnce(updated)
+    const store = useCampaignStore()
+    await store.fetchGames()
+    await store.updateGame(1, { title: 'Новое', cover: 'https://img.test/1.jpg' })
+    expect(store.games[0].title).toBe('Новое')
+    expect(store.games[0].cover).toBe('https://img.test/1.jpg')
+  })
+
+  it('updateGame — обновляет currentGame если она открыта', async () => {
+    vi.mocked(gamesApi.get).mockResolvedValueOnce(mockGameDetail)
+    const updated = { ...mockGame, title: 'Изменённая' }
+    vi.mocked(gamesApi.patch).mockResolvedValueOnce(updated)
+    const store = useCampaignStore()
+    await store.fetchGame(1)
+    await store.updateGame(1, { title: 'Изменённая' })
+    expect(store.currentGame?.title).toBe('Изменённая')
   })
 
   it('removeGame — удаляет игру из списка', async () => {

@@ -41,7 +41,9 @@
           @click="router.push(`/master/${game.id}`)"
         >
           <div class="card-cover">
-            <span class="card-glyph">🜂</span>
+            <img v-if="game.cover" :src="game.cover" :alt="game.title" class="card-cover-img" />
+            <span v-else class="card-glyph">🜂</span>
+            <button class="btn-edit" title="Редактировать" @click.stop="openEdit(game)">⚙</button>
           </div>
           <div class="card-body">
             <div class="card-title">{{ game.title }}</div>
@@ -65,7 +67,7 @@
 
           <label class="field-label">Название</label>
           <input
-            v-model="form.title"
+            v-model="createForm.title"
             autofocus
             class="field-input"
             placeholder="Тени над Гавенвудом"
@@ -74,17 +76,69 @@
 
           <label class="field-label">Игровая система</label>
           <input
-            v-model="form.system"
+            v-model="createForm.system"
             class="field-input"
             placeholder="D&D 5e, OSR, самопис..."
             @keydown.enter="submitCreate"
           />
 
+          <label class="field-label">Превью (URL изображения)</label>
+          <input
+            v-model="createForm.cover"
+            class="field-input"
+            placeholder="https://..."
+            @keydown.enter="submitCreate"
+          />
+
           <div class="modal-actions">
-            <button class="btn-primary" :disabled="!form.title.trim() || creating" @click="submitCreate">
+            <button class="btn-primary" :disabled="!createForm.title.trim() || creating" @click="submitCreate">
               {{ creating ? 'Создаю...' : 'Создать' }}
             </button>
             <button class="btn-secondary" @click="closeCreate">Отмена</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- модалка редактирования игры -->
+    <Teleport to="body">
+      <div v-if="editOpen" class="modal-overlay" @click.self="closeEdit">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Редактировать кампанию</h3>
+            <button class="btn-close" @click="closeEdit">✕</button>
+          </div>
+
+          <label class="field-label">Название</label>
+          <input
+            v-model="editForm.title"
+            autofocus
+            class="field-input"
+            placeholder="Тени над Гавенвудом"
+            @keydown.enter="submitEdit"
+          />
+
+          <label class="field-label">Игровая система</label>
+          <input
+            v-model="editForm.system"
+            class="field-input"
+            placeholder="D&D 5e, OSR, самопис..."
+            @keydown.enter="submitEdit"
+          />
+
+          <label class="field-label">Превью (URL изображения)</label>
+          <input
+            v-model="editForm.cover"
+            class="field-input"
+            placeholder="https://..."
+            @keydown.enter="submitEdit"
+          />
+
+          <div class="modal-actions">
+            <button class="btn-primary" :disabled="!editForm.title.trim() || saving" @click="submitEdit">
+              {{ saving ? 'Сохраняю...' : 'Сохранить' }}
+            </button>
+            <button class="btn-secondary" @click="closeEdit">Отмена</button>
           </div>
         </div>
       </div>
@@ -96,18 +150,21 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCampaignStore } from '../stores/campaign'
+import type { Game } from '../api/games'
 
 const store = useCampaignStore()
 const router = useRouter()
 
 onMounted(() => store.fetchGames())
 
+// ── Создание ──────────────────────────────────────────────────────────────────
+
 const createOpen = ref(false)
 const creating = ref(false)
-const form = ref({ title: '', system: '' })
+const createForm = ref({ title: '', system: '', cover: '' })
 
 function openCreate() {
-  form.value = { title: '', system: '' }
+  createForm.value = { title: '', system: '', cover: '' }
   createOpen.value = true
 }
 
@@ -116,16 +173,54 @@ function closeCreate() {
 }
 
 async function submitCreate() {
-  if (!form.value.title.trim() || creating.value) return
+  if (!createForm.value.title.trim() || creating.value) return
   creating.value = true
   try {
-    const game = await store.createGame({ title: form.value.title.trim(), system: form.value.system.trim() })
+    const game = await store.createGame({
+      title: createForm.value.title.trim(),
+      system: createForm.value.system.trim(),
+      cover: createForm.value.cover.trim() || null,
+    })
     closeCreate()
     router.push(`/master/${game.id}`)
   } finally {
     creating.value = false
   }
 }
+
+// ── Редактирование ────────────────────────────────────────────────────────────
+
+const editOpen = ref(false)
+const saving = ref(false)
+const editGameId = ref<number | null>(null)
+const editForm = ref({ title: '', system: '', cover: '' })
+
+function openEdit(game: Game) {
+  editGameId.value = game.id
+  editForm.value = { title: game.title, system: game.system, cover: game.cover ?? '' }
+  editOpen.value = true
+}
+
+function closeEdit() {
+  editOpen.value = false
+}
+
+async function submitEdit() {
+  if (!editForm.value.title.trim() || saving.value || editGameId.value === null) return
+  saving.value = true
+  try {
+    await store.updateGame(editGameId.value, {
+      title: editForm.value.title.trim(),
+      system: editForm.value.system.trim(),
+      cover: editForm.value.cover.trim() || null,
+    })
+    closeEdit()
+  } finally {
+    saving.value = false
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -297,6 +392,9 @@ function formatDate(iso: string) {
   border-color: var(--t21);
   transform: translateY(-2px);
 }
+.game-card:hover .btn-edit {
+  opacity: 1;
+}
 
 .card-cover {
   height: 120px;
@@ -305,11 +403,41 @@ function formatDate(iso: string) {
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
+}
+
+.card-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .card-glyph {
   font-size: 40px;
   opacity: .6;
+}
+
+.btn-edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 7px;
+  color: var(--t28);
+  font-size: 14px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s, background .12s;
+}
+.btn-edit:hover {
+  background: rgba(0,0,0,.75);
+  color: var(--t30);
 }
 
 .card-body {
@@ -397,8 +525,9 @@ function formatDate(iso: string) {
   font-size: 14px;
   margin-bottom: 18px;
   transition: border-color .12s;
+  box-sizing: border-box;
 }
-.field-input:focus { border-color: var(--t20); }
+.field-input:focus { border-color: var(--t20); outline: none; }
 
 .modal-actions {
   display: flex;

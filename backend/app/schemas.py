@@ -120,11 +120,13 @@ class EdgeRead(BaseModel):
 class GameCreate(BaseModel):
     title: str
     system: str = ""
+    cover: str | None = None
 
 
 class GamePatch(BaseModel):
     title: str | None = None
     system: str | None = None
+    cover: str | None = None
 
 
 class GameRead(BaseModel):

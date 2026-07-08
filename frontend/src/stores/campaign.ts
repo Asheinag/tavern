@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { gamesApi, type Game, type GameCreate, type GameDetail, type ScenePatch } from '../api/games'
+import { gamesApi, type Game, type GameCreate, type GameDetail, type GamePatch, type ScenePatch } from '../api/games'
 
 export const useCampaignStore = defineStore('campaign', () => {
   // список игр (GamesView)
@@ -30,6 +30,16 @@ export const useCampaignStore = defineStore('campaign', () => {
   async function createGame(data: GameCreate): Promise<Game> {
     const game = await gamesApi.create(data)
     games.value.unshift(game)
+    return game
+  }
+
+  async function updateGame(id: number, data: GamePatch): Promise<Game> {
+    const game = await gamesApi.patch(id, data)
+    const idx = games.value.findIndex((g) => g.id === id)
+    if (idx !== -1) games.value[idx] = game
+    if (currentGame.value?.id === id) {
+      currentGame.value = { ...currentGame.value, ...game }
+    }
     return game
   }
 
@@ -91,7 +101,7 @@ export const useCampaignStore = defineStore('campaign', () => {
   }
 
   return {
-    games, loading, error, fetchGames, createGame, removeGame,
+    games, loading, error, fetchGames, createGame, updateGame, removeGame,
     currentGame, gameLoading, gameError, fetchGame, addScene, updateScene, removeScene,
     addEdge, removeEdge,
   }

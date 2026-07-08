@@ -9,6 +9,12 @@ export interface Game {
   created_at: string
 }
 
+export interface GamePatch {
+  title?: string
+  system?: string
+  cover?: string | null
+}
+
 export interface Scene {
   id: number
   game_id: number
@@ -39,6 +45,7 @@ export interface GameDetail extends Game {
 export interface GameCreate {
   title: string
   system?: string
+  cover?: string | null
 }
 
 export interface SceneCreate {
@@ -65,6 +72,7 @@ export interface GameByCode {
 export const gamesApi = {
   list: () => http.get<Game[]>('/games').then((r) => r.data),
   create: (data: GameCreate) => http.post<Game>('/games', data).then((r) => r.data),
+  patch: (id: number, data: GamePatch) => http.patch<Game>(`/games/${id}`, data).then((r) => r.data),
   remove: (id: number) => http.delete(`/games/${id}`),
   get: (id: number) => http.get<GameDetail>(`/games/${id}`).then((r) => r.data),
   getByCode: (code: string) => http.get<GameByCode>(`/games/by-code/${code}`).then((r) => r.data),
