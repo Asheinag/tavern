@@ -1,9 +1,11 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from httpx import AsyncClient
 
-from app.realtime.ws import _log_kind, _log_text  # noqa: F401 — internal helpers
+from app.realtime.ws import _log_kind, _log_text
 
-# ── Unit: helpers ──────────────────────────────────────────────────────────────
+# ── Unit: _log_kind ────────────────────────────────────────────────────────────
 
 
 def test_log_kind_show_events():
@@ -28,28 +30,83 @@ def test_log_kind_roll():
     assert _log_kind("dice_roll") == "roll"
 
 
-def test_log_text_show_bg():
-    assert _log_text("show_bg", {"artId": 7}) == "Фон: artId=7"
+# ── Unit: _log_text ────────────────────────────────────────────────────────────
 
 
-def test_log_text_add_npc():
-    assert _log_text("add_npc", {"artId": 8, "side": "left"}) == "NPC artId=8 → left"
+def _mock_db(title: str = "Тест") -> MagicMock:
+    result = MagicMock()
+    result.scalar_one_or_none.return_value = title
+    db = MagicMock()
+    db.execute = AsyncMock(return_value=result)
+    return db
 
 
-def test_log_text_clear_all():
-    assert _log_text("clear_all", {}) == "Экран очищен"
+@pytest.mark.asyncio
+async def test_log_text_show_bg():
+    text = await _log_text("show_bg", {"artId": 7}, _mock_db("Лес"))
+    assert text == "Фон: Лес"
 
 
-def test_log_text_scene_change():
-    assert _log_text("scene_change", {"sceneId": 3}) == "Переход в сцену 3"
+@pytest.mark.asyncio
+async def test_log_text_add_npc():
+    text = await _log_text("add_npc", {"artId": 8, "side": "left"}, _mock_db("Николай"))
+    assert text == "NPC «Николай» → left"
 
 
-def test_log_text_dice_roll():
-    assert _log_text("dice_roll", {"sides": 20, "result": 17}) == "Бросок d20: 17"
+@pytest.mark.asyncio
+async def test_log_text_remove_npc():
+    text = await _log_text("remove_npc", {"artId": 8}, _mock_db("Николай"))
+    assert text == "NPC «Николай» убран"
 
 
-def test_log_text_unknown_event():
-    assert _log_text("unknown", {}) == "unknown"
+@pytest.mark.asyncio
+async def test_log_text_show_text():
+    text = await _log_text("show_text", {"artId": 3}, _mock_db("Письмо"))
+    assert text == "Заметка: Письмо"
+
+
+@pytest.mark.asyncio
+async def test_log_text_clear_all():
+    text = await _log_text("clear_all", {}, _mock_db())
+    assert text == "Экран очищен"
+
+
+@pytest.mark.asyncio
+async def test_log_text_clear_bg():
+    text = await _log_text("clear_bg", {}, _mock_db())
+    assert text == "Фон убран"
+
+
+@pytest.mark.asyncio
+async def test_log_text_hide_text():
+    text = await _log_text("hide_text", {}, _mock_db())
+    assert text == "Заметка скрыта"
+
+
+@pytest.mark.asyncio
+async def test_log_text_scene_change():
+    text = await _log_text("scene_change", {"sceneId": 3}, _mock_db("Таверна"))
+    assert text == "Переход: Таверна"
+
+
+@pytest.mark.asyncio
+async def test_log_text_dice_roll():
+    text = await _log_text("dice_roll", {"sides": 20, "result": 17}, _mock_db())
+    assert text == "Бросок d20: 17"
+
+
+@pytest.mark.asyncio
+async def test_log_text_unknown_event():
+    text = await _log_text("unknown", {}, _mock_db())
+    assert text == "unknown"
+
+
+@pytest.mark.asyncio
+async def test_log_text_missing_art_id():
+    db = _mock_db()
+    db.execute.return_value.scalar_one_or_none.return_value = None
+    text = await _log_text("show_bg", {}, db)
+    assert text == "Фон: ?"
 
 
 # ── Integration: REST log endpoints ───────────────────────────────────────────

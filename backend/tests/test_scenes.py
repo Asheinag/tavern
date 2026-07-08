@@ -228,3 +228,39 @@ async def test_delete_scene_cascades_edges(client: AsyncClient):
     assert (s1, s2) not in edge_pairs
     assert (s2, s3) not in edge_pairs
     assert (s3, s1) in edge_pairs  # это ребро не трогали
+
+
+# ── Логирование связей ────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_create_edge_writes_log(client: AsyncClient):
+    game_id = await _create_game(client)
+    s1 = await _create_scene(client, game_id, "Таверна")
+    s2 = await _create_scene(client, game_id, "Подземелье")
+    await _create_edge(client, game_id, s1, s2)
+
+    log = await client.get(f"/api/games/{game_id}/log")
+    entries = log.json()
+    assert len(entries) == 1
+    assert entries[0]["kind"] == "move"
+    assert "Таверна" in entries[0]["text"]
+    assert "Подземелье" in entries[0]["text"]
+
+
+@pytest.mark.asyncio
+async def test_delete_edge_writes_log(client: AsyncClient):
+    game_id = await _create_game(client)
+    s1 = await _create_scene(client, game_id, "Таверна")
+    s2 = await _create_scene(client, game_id, "Подземелье")
+    edge_id = await _create_edge(client, game_id, s1, s2)
+
+    await client.delete(f"/api/edges/{edge_id}")
+
+    log = await client.get(f"/api/games/{game_id}/log")
+    entries = log.json()
+    assert len(entries) == 2
+    assert entries[1]["kind"] == "move"
+    assert "удалена" in entries[1]["text"]
+    assert "Таверна" in entries[1]["text"]
+    assert "Подземелье" in entries[1]["text"]

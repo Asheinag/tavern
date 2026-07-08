@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
-from app.models import SessionLog
+from app.models import Artifact, Scene, SessionLog
 from app.realtime.protocol import IncomingMessage
 from app.realtime.rooms import room_manager
 
@@ -19,24 +20,46 @@ def _log_kind(event_type: str) -> str:
     return _EVENT_KIND.get(event_type, "show")
 
 
-def _log_text(event_type: str, payload: dict) -> str:
+async def _artifact_title(art_id: int | None, db: AsyncSession) -> str:
+    if art_id is None:
+        return "?"
+    result = await db.execute(select(Artifact.title).where(Artifact.id == art_id))
+    title = result.scalar_one_or_none()
+    return title or f"#{art_id}"
+
+
+async def _scene_title(scene_id: int | None, db: AsyncSession) -> str:
+    if scene_id is None:
+        return "?"
+    result = await db.execute(select(Scene.title).where(Scene.id == scene_id))
+    title = result.scalar_one_or_none()
+    return title or f"#{scene_id}"
+
+
+async def _log_text(event_type: str, payload: dict, db: AsyncSession) -> str:
     match event_type:
         case "show_bg":
-            return f"Фон: artId={payload.get('artId')}"
+            name = await _artifact_title(payload.get("artId"), db)
+            return f"Фон: {name}"
         case "clear_bg":
             return "Фон убран"
         case "add_npc":
-            return f"NPC artId={payload.get('artId')} → {payload.get('side', 'left')}"
+            name = await _artifact_title(payload.get("artId"), db)
+            side = payload.get("side", "left")
+            return f"NPC «{name}» → {side}"
         case "remove_npc":
-            return f"NPC artId={payload.get('artId')} убран"
+            name = await _artifact_title(payload.get("artId"), db)
+            return f"NPC «{name}» убран"
         case "show_text":
-            return f"Заметка: artId={payload.get('artId')}"
+            name = await _artifact_title(payload.get("artId"), db)
+            return f"Заметка: {name}"
         case "hide_text":
             return "Заметка скрыта"
         case "clear_all":
             return "Экран очищен"
         case "scene_change":
-            return f"Переход в сцену {payload.get('sceneId')}"
+            name = await _scene_title(payload.get("sceneId"), db)
+            return f"Переход: {name}"
         case "dice_roll":
             return f"Бросок d{payload.get('sides', '?')}: {payload.get('result', '?')}"
         case _:
@@ -77,7 +100,7 @@ async def ws_endpoint(
                 SessionLog(
                     game_id=game_id,
                     kind=_log_kind(msg.type),
-                    text=_log_text(msg.type, msg.payload),
+                    text=await _log_text(msg.type, msg.payload, db),
                     scene_id=scene_id,
                 )
             )
