@@ -25,9 +25,7 @@ class User(Base):
     artifacts: Mapped[list["Artifact"]] = relationship("Artifact", back_populates="owner")
     characters: Mapped[list["Character"]] = relationship("Character", back_populates="owner")
     game_players: Mapped[list["GamePlayer"]] = relationship("GamePlayer", back_populates="user")
-    auth_sessions: Mapped[list["AuthSession"]] = relationship(
-        "AuthSession", back_populates="user"
-    )
+    auth_sessions: Mapped[list["AuthSession"]] = relationship("AuthSession", back_populates="user")
 
 
 class Character(Base):
@@ -63,9 +61,7 @@ class GamePlayer(Base):
 
     game: Mapped["Game"] = relationship("Game", back_populates="game_players")
     user: Mapped["User"] = relationship("User", back_populates="game_players")
-    character: Mapped["Character | None"] = relationship(
-        "Character", back_populates="game_players"
-    )
+    character: Mapped["Character | None"] = relationship("Character", back_populates="game_players")
 
 
 class InviteCode(Base):
