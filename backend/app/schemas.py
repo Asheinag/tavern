@@ -44,6 +44,46 @@ class InviteCodeRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── Character ─────────────────────────────────────────────────────────────────
+
+
+class CharacterCreate(BaseModel):
+    name: str
+    bio: str | None = None
+
+
+class CharacterPatch(BaseModel):
+    name: str | None = None
+    bio: str | None = None
+
+
+class CharacterRead(BaseModel):
+    id: int
+    owner_id: int
+    name: str
+    avatar: str | None
+    bio: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── GamePlayer ────────────────────────────────────────────────────────────────
+
+
+class GamePlayerPatch(BaseModel):
+    character_id: int | None = None
+
+
+class GamePlayerRead(BaseModel):
+    game_id: int
+    user_id: int
+    character_id: int | None
+    role: str
+
+    model_config = {"from_attributes": True}
+
+
 # ── Artifact ──────────────────────────────────────────────────────────────────
 
 ARTIFACT_TYPES = {"location_image", "npc"}

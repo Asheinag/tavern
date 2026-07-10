@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.realtime.ws import router as ws_router
-from app.routers import artifacts, auth, edges, games, health, invites, log, scenes
+from app.routers import artifacts, auth, characters, edges, games, health, invites, log, scenes
 
 app = FastAPI(title="Tavern API")
 
@@ -21,6 +21,7 @@ app.mount("/uploads", StaticFiles(directory=settings.uploads_dir), name="uploads
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(invites.router)
+app.include_router(characters.router)
 app.include_router(games.router)
 app.include_router(scenes.router)
 app.include_router(edges.router)
