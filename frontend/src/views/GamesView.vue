@@ -3,11 +3,15 @@
     <div class="inner">
       <!-- шапка -->
       <div class="header">
-        <div class="avatar">DM</div>
+        <div class="avatar">
+          <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" class="avatar-img" />
+          <span v-else>{{ authStore.user?.username?.slice(0, 2).toUpperCase() ?? 'DM' }}</span>
+        </div>
         <div class="header-info">
-          <div class="header-name">Добро пожаловать, Мастер</div>
+          <div class="header-name">{{ authStore.user?.username ?? 'Мастер' }}</div>
           <div class="header-sub">{{ store.games.length }} кампаний</div>
         </div>
+        <button class="btn-secondary btn-logout" @click="handleLogout">Выйти</button>
         <button class="btn-primary" @click="openCreate">+ Создать игру</button>
       </div>
 
@@ -150,10 +154,17 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCampaignStore } from '../stores/campaign'
+import { useAuthStore } from '../stores/auth'
 import type { Game } from '../api/games'
 
 const store = useCampaignStore()
+const authStore = useAuthStore()
 const router = useRouter()
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
+}
 
 onMounted(() => store.fetchGames())
 
@@ -261,6 +272,18 @@ function formatDate(iso: string) {
   align-items: center;
   justify-content: center;
   flex: none;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn-logout {
+  padding: 9px 14px;
+  font-size: 12px;
 }
 
 .header-info { flex: 1; min-width: 0; }
