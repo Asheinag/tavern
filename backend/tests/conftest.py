@@ -8,6 +8,7 @@ from app.db import Base, get_db
 from app.deps import current_user
 from app.main import app
 from app.models import User
+from app.routers.auth import _hash
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -47,7 +48,33 @@ def tmp_uploads(tmp_path: Path, monkeypatch):
 
 
 @pytest.fixture
-async def client(db_session: AsyncSession, tmp_uploads: Path):
+async def default_user(db_session: AsyncSession) -> User:
+    user = User(username="dev_master", password_hash=_hash("dev"), system_role="admin")
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession, tmp_uploads: Path, default_user: User):
+    async def override_get_db():
+        yield db_session
+
+    async def override_current_user():
+        return default_user
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[current_user] = override_current_user
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def raw_client(db_session: AsyncSession, tmp_uploads: Path):
+    """Клиент без переопределения current_user — для тестирования реальной auth."""
+
     async def override_get_db():
         yield db_session
 
