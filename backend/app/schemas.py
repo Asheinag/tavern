@@ -2,6 +2,48 @@ from datetime import datetime
 
 from pydantic import BaseModel, field_validator
 
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+
+class RegisterIn(BaseModel):
+    username: str
+    password: str
+    invite_code: str
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+class UserRead(BaseModel):
+    id: int
+    username: str
+    avatar: str | None
+    bio: str | None
+    system_role: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── InviteCode ────────────────────────────────────────────────────────────────
+
+
+class InviteCodeCreate(BaseModel):
+    expires_at: datetime | None = None
+
+
+class InviteCodeRead(BaseModel):
+    id: int
+    code: str
+    used_by: int | None
+    expires_at: datetime | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 # ── Artifact ──────────────────────────────────────────────────────────────────
 
 ARTIFACT_TYPES = {"location_image", "npc"}
