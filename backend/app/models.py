@@ -14,13 +14,82 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
-    email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
-    avatar_color: Mapped[str] = mapped_column(String(20), default="#6c757d")
+    username: Mapped[str] = mapped_column(String(100), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    avatar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    system_role: Mapped[str] = mapped_column(String(20), default="user")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     games: Mapped[list["Game"]] = relationship("Game", back_populates="owner")
     artifacts: Mapped[list["Artifact"]] = relationship("Artifact", back_populates="owner")
+    characters: Mapped[list["Character"]] = relationship("Character", back_populates="owner")
+    game_players: Mapped[list["GamePlayer"]] = relationship("GamePlayer", back_populates="user")
+    auth_sessions: Mapped[list["AuthSession"]] = relationship("AuthSession", back_populates="user")
+
+
+class Character(Base):
+    __tablename__ = "characters"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(200))
+    avatar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    owner: Mapped["User"] = relationship("User", back_populates="characters")
+    game_players: Mapped[list["GamePlayer"]] = relationship(
+        "GamePlayer", back_populates="character"
+    )
+
+
+class GamePlayer(Base):
+    __tablename__ = "game_players"
+
+    game_id: Mapped[int] = mapped_column(
+        ForeignKey("games.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    character_id: Mapped[int | None] = mapped_column(
+        ForeignKey("characters.id", ondelete="SET NULL"), nullable=True
+    )
+    role: Mapped[str] = mapped_column(String(20))  # master / player
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    game: Mapped["Game"] = relationship("Game", back_populates="game_players")
+    user: Mapped["User"] = relationship("User", back_populates="game_players")
+    character: Mapped["Character | None"] = relationship("Character", back_populates="game_players")
+
+
+class InviteCode(Base):
+    __tablename__ = "invite_codes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(64), unique=True)
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    used_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    creator: Mapped["User"] = relationship("User", foreign_keys=[created_by])
+    used_by_user: Mapped["User | None"] = relationship("User", foreign_keys=[used_by])
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)  # UUID hex
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    user: Mapped["User"] = relationship("User", back_populates="auth_sessions")
 
 
 class Game(Base):
@@ -40,6 +109,9 @@ class Game(Base):
     )
     edges: Mapped[list["Edge"]] = relationship(
         "Edge", back_populates="game", cascade="all, delete-orphan"
+    )
+    game_players: Mapped[list["GamePlayer"]] = relationship(
+        "GamePlayer", back_populates="game", cascade="all, delete-orphan"
     )
 
 
