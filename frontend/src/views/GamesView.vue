@@ -3,12 +3,14 @@
     <div class="inner">
       <!-- шапка -->
       <div class="header">
-        <div class="avatar">
+        <div class="avatar" role="button" title="Профиль" @click="router.push('/profile')">
           <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" class="avatar-img" />
           <span v-else>{{ authStore.user?.username?.slice(0, 2).toUpperCase() ?? 'DM' }}</span>
         </div>
         <div class="header-info">
-          <div class="header-name">{{ authStore.user?.username ?? 'Мастер' }}</div>
+          <div class="header-name" style="cursor:pointer" @click="router.push('/profile')">
+            {{ authStore.user?.username ?? 'Мастер' }}
+          </div>
           <div class="header-sub">{{ store.games.length }} кампаний</div>
         </div>
         <button class="btn-secondary btn-logout" @click="handleLogout">Выйти</button>

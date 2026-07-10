@@ -53,5 +53,10 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  return { user, loading, error, fetchMe, login, register, logout }
+  async function uploadAvatar(file: File) {
+    const res = await authApi.uploadAvatar(file)
+    user.value = res.data
+  }
+
+  return { user, loading, error, fetchMe, login, register, logout, uploadAvatar }
 })

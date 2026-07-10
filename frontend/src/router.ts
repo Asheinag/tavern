@@ -4,6 +4,7 @@ import GamesView from './views/GamesView.vue'
 import LoginView from './views/LoginView.vue'
 import MasterView from './views/MasterView.vue'
 import PlayerView from './views/PlayerView.vue'
+import ProfileView from './views/ProfileView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -11,6 +12,7 @@ const router = createRouter({
     { path: '/', redirect: '/games' },
     { path: '/login', component: LoginView, meta: { public: true } },
     { path: '/games', component: GamesView },
+    { path: '/profile', component: ProfileView },
     { path: '/master/:id', component: MasterView },
     { path: '/play/:code', component: PlayerView, meta: { public: true } },
   ],
