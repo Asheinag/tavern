@@ -8,12 +8,12 @@ from app.models import User
 
 async def current_user(db: AsyncSession = Depends(get_db)) -> User:
     """Заглушка аутентификации — возвращает первого пользователя или создаёт dev-пользователя.
-    Заменить реальной auth при решении вопроса (архитектура §6).
+    Заменить реальной auth при решении вопроса (архитектура §6 → PR auth-sessions).
     """
     result = await db.execute(select(User).limit(1))
     user = result.scalar_one_or_none()
     if not user:
-        user = User(name="Dev Master")
+        user = User(username="dev_master", password_hash="dev", system_role="admin")
         db.add(user)
         await db.commit()
         await db.refresh(user)

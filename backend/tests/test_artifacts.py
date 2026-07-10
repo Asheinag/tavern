@@ -127,7 +127,7 @@ async def test_other_user_cannot_patch_artifact(
 ):
     artifact_id = (await _upload(client)).json()["id"]
 
-    other_user = User(name="Other", avatar_color="#000")
+    other_user = User(username="other", password_hash="x")
     db_session.add(other_user)
     await db_session.commit()
     await db_session.refresh(other_user)
@@ -145,7 +145,7 @@ async def test_other_user_cannot_delete_artifact(
 ):
     artifact_id = (await _upload(client)).json()["id"]
 
-    other_user = User(name="Other", avatar_color="#000")
+    other_user = User(username="other", password_hash="x")
     db_session.add(other_user)
     await db_session.commit()
     await db_session.refresh(other_user)
