@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import GamesView from '../views/GamesView.vue'
 import { useCampaignStore } from '../stores/campaign'
+import { useAuthStore } from '../stores/auth'
 import { gamesApi } from '../api/games'
 
 vi.mock('../api/games', () => ({
@@ -19,6 +21,20 @@ vi.mock('../api/games', () => ({
     deleteEdge: vi.fn(),
   },
 }))
+
+vi.mock('../stores/auth', () => ({
+  useAuthStore: vi.fn(),
+}))
+
+const mockAuthStore = {
+  user: { id: 1, username: 'master', avatar: null, bio: null, system_role: 'admin', created_at: '' },
+  loading: false,
+  error: null,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn().mockResolvedValue(undefined),
+  fetchMe: vi.fn(),
+}
 
 function makeRouter() {
   return createRouter({
@@ -43,6 +59,7 @@ describe('GamesView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    vi.mocked(useAuthStore).mockReturnValue(mockAuthStore as any)
   })
 
   async function mountView() {
@@ -92,7 +109,7 @@ describe('GamesView', () => {
     const wrapper = await mountView()
     await wrapper.find('.btn-primary').trigger('click')
     await wrapper.vm.$nextTick()
-    const cancelBtn = document.body.querySelector<HTMLElement>('.btn-secondary')
+    const cancelBtn = document.body.querySelector<HTMLElement>('.modal .btn-secondary')
     cancelBtn?.click()
     await wrapper.vm.$nextTick()
     expect(document.body.querySelector('.modal')).toBeFalsy()
